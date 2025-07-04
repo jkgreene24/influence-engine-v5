@@ -1,63 +1,63 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ArrowLeft, Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignIn() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
-      })
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       } else {
         // Redirect to dashboard or chat
-        window.location.href = "/chat"
+        window.location.href = "/chat";
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignIn = async () => {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
-      })
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred");
     }
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -72,15 +72,25 @@ export default function SignIn() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-full mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Welcome back</h2>
-          <p className="mt-2 text-gray-600">Sign in to your Influence Engine™ account</p>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="w-16 h-16 rounded-full mx-auto mb-4"
+          />
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Welcome back
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Sign in to your Influence Engine™ account
+          </p>
         </div>
 
         {/* Sign In Form */}
         <Card className="border-2 border-gray-200">
           <CardHeader>
-            <CardTitle className="text-center text-xl font-semibold text-gray-900">Sign In</CardTitle>
+            <CardTitle className="text-center text-xl font-semibold text-gray-900">
+              Sign In
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignIn} className="space-y-6">
@@ -91,7 +101,10 @@ export default function SignIn() {
               )}
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email address
                 </label>
                 <div className="relative">
@@ -109,7 +122,10 @@ export default function SignIn() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -128,7 +144,11 @@ export default function SignIn() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -141,11 +161,17 @@ export default function SignIn() {
                     type="checkbox"
                     className="h-4 w-4 text-[#92278F] focus:ring-[#92278F] border-gray-300 rounded"
                   />
-                  <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
+                  <label
+                    htmlFor="remember-me"
+                    className="ml-2 block text-sm text-gray-700"
+                  >
                     Remember me
                   </label>
                 </div>
-                <a href="#" className="text-sm text-[#92278F] hover:text-[#7a1f78] font-medium">
+                <a
+                  href="#"
+                  className="text-sm text-[#92278F] hover:text-[#7a1f78] font-medium"
+                >
                   Forgot password?
                 </a>
               </div>
@@ -175,7 +201,9 @@ export default function SignIn() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -209,7 +237,10 @@ export default function SignIn() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Don't have an account?{" "}
-                <a href="/auth/signup" className="text-[#92278F] hover:text-[#7a1f78] font-medium">
+                <a
+                  href="/auth/signup"
+                  className="text-[#92278F] hover:text-[#7a1f78] font-medium"
+                >
                   Sign up
                 </a>
               </p>
@@ -218,5 +249,5 @@ export default function SignIn() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

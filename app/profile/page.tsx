@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect, useRef } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { useState, useEffect, useRef } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   ArrowLeft,
   Save,
@@ -24,15 +30,15 @@ import {
   X,
   Camera,
   Upload,
-} from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface InfluenceStyle {
-  id: string
-  name: string
-  icon: React.ReactNode
-  color: string
-  description: string
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  color: string;
+  description: string;
 }
 
 const influenceStyles: InfluenceStyle[] = [
@@ -41,14 +47,16 @@ const influenceStyles: InfluenceStyle[] = [
     name: "Catalyst",
     icon: <Zap className="w-5 h-5" />,
     color: "bg-orange-500",
-    description: "Energetic change-makers who inspire action and drive innovation",
+    description:
+      "Energetic change-makers who inspire action and drive innovation",
   },
   {
     id: "diplomat",
     name: "Diplomat",
     icon: <Users className="w-5 h-5" />,
     color: "bg-blue-500",
-    description: "Skilled negotiators who build consensus and foster collaboration",
+    description:
+      "Skilled negotiators who build consensus and foster collaboration",
   },
   {
     id: "anchor",
@@ -62,139 +70,161 @@ const influenceStyles: InfluenceStyle[] = [
     name: "Connector",
     icon: <Link className="w-5 h-5" />,
     color: "bg-purple-500",
-    description: "Natural networkers who bridge relationships and create opportunities",
+    description:
+      "Natural networkers who bridge relationships and create opportunities",
   },
   {
     id: "navigator",
     name: "Navigator",
     icon: <Navigation className="w-5 h-5" />,
     color: "bg-red-500",
-    description: "Strategic thinkers who chart the course and guide others forward",
+    description:
+      "Strategic thinkers who chart the course and guide others forward",
   },
-]
+];
 
 export default function Profile() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [userName, setUserName] = useState("")
-  const [email, setEmail] = useState("")
-  const [primaryStyle, setPrimaryStyle] = useState<string>("")
-  const [secondaryStyle, setSecondaryStyle] = useState<string>("")
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  const [avatarUrl, setAvatarUrl] = useState<string>("")
-  const [avatarUploading, setAvatarUploading] = useState(false)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [userName, setUserName] = useState("");
+  const [email, setEmail] = useState("");
+  const [primaryStyle, setPrimaryStyle] = useState<string>("");
+  const [secondaryStyle, setSecondaryStyle] = useState<string>("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string>("");
+  const [avatarUploading, setAvatarUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
-      const supabase = createClient()
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser();
 
       if (user) {
-        setUser(user)
-        setEmail(user.email || "")
-        setAvatarUrl(user.user_metadata?.avatar_url || "")
+        setUser(user);
+        setEmail(user.email || "");
+        setAvatarUrl(user.user_metadata?.avatar_url || "");
 
         // Load from auth metadata first (for new users)
-        setFirstName(user.user_metadata?.first_name || "")
-        setLastName(user.user_metadata?.last_name || "")
+        setFirstName(user.user_metadata?.first_name || "");
+        setLastName(user.user_metadata?.last_name || "");
 
         // Try to fetch from profiles table
-        const { data: profileData, error } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+        const { data: profileData, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
+          .single();
 
         if (profileData && !error) {
-          setProfile(profileData)
+          setProfile(profileData);
           // Override with profile data if available
-          setFirstName(profileData.first_name || user.user_metadata?.first_name || "")
-          setLastName(profileData.last_name || user.user_metadata?.last_name || "")
-          setUserName(profileData.user_name || "")
-          setPrimaryStyle(profileData.primary_influence_style || "")
-          setSecondaryStyle(profileData.secondary_influence_style || "")
+          setFirstName(
+            profileData.first_name || user.user_metadata?.first_name || ""
+          );
+          setLastName(
+            profileData.last_name || user.user_metadata?.last_name || ""
+          );
+          setUserName(profileData.user_name || "");
+          setPrimaryStyle(profileData.primary_influence_style || "");
+          setSecondaryStyle(profileData.secondary_influence_style || "");
         }
       }
-    }
-    fetchUserAndProfile()
-  }, [])
+    };
+    fetchUserAndProfile();
+  }, []);
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click()
-  }
+    fileInputRef.current?.click();
+  };
 
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (!file) return
+  const handleFileSelect = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
     // Validate file type
-    const allowedTypes = ["image/png", "image/jpg", "image/jpeg", "image/gif", "image/webp"]
+    const allowedTypes = [
+      "image/png",
+      "image/jpg",
+      "image/jpeg",
+      "image/gif",
+      "image/webp",
+    ];
     if (!allowedTypes.includes(file.type)) {
-      alert("Please select a valid image file (PNG, JPG, JPEG, GIF, or WebP)")
-      return
+      alert("Please select a valid image file (PNG, JPG, JPEG, GIF, or WebP)");
+      return;
     }
 
     // Validate file size (max 5MB)
-    const maxSize = 5 * 1024 * 1024 // 5MB
+    const maxSize = 5 * 1024 * 1024; // 5MB
     if (file.size > maxSize) {
-      alert("File size must be less than 5MB")
-      return
+      alert("File size must be less than 5MB");
+      return;
     }
 
-    setAvatarUploading(true)
+    setAvatarUploading(true);
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
 
       // Create a unique filename
-      const fileExt = file.name.split(".").pop()
-      const fileName = `${user?.id}-${Date.now()}.${fileExt}`
+      const fileExt = file.name.split(".").pop();
+      const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
 
       // Upload to Supabase Storage
-      const { data: uploadData, error: uploadError } = await supabase.storage.from("avatars").upload(fileName, file, {
-        cacheControl: "3600",
-        upsert: false,
-      })
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
       if (uploadError) {
-        throw uploadError
+        throw uploadError;
       }
 
       // Get public URL
-      const { data: urlData } = supabase.storage.from("avatars").getPublicUrl(fileName)
+      const { data: urlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(fileName);
 
-      const publicUrl = urlData.publicUrl
+      const publicUrl = urlData.publicUrl;
 
       // Update user metadata with new avatar URL
       const { error: updateError } = await supabase.auth.updateUser({
         data: {
           avatar_url: publicUrl,
         },
-      })
+      });
 
       if (updateError) {
-        throw updateError
+        throw updateError;
       }
 
-      setAvatarUrl(publicUrl)
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      setAvatarUrl(publicUrl);
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      console.error("Error uploading avatar:", error)
-      alert("Failed to upload avatar. Please try again.")
+      console.error("Error uploading avatar:", error);
+      alert("Failed to upload avatar. Please try again.");
     } finally {
-      setAvatarUploading(false)
+      setAvatarUploading(false);
     }
-  }
+  };
 
   const handleUpdateProfile = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
 
       // Update auth metadata
       const { error: authError } = await supabase.auth.updateUser({
@@ -203,10 +233,10 @@ export default function Profile() {
           last_name: lastName,
           full_name: `${firstName} ${lastName}`,
         },
-      })
+      });
 
       if (authError) {
-        throw authError
+        throw authError;
       }
 
       // Upsert profile data
@@ -217,79 +247,85 @@ export default function Profile() {
         user_name: userName,
         primary_influence_style: primaryStyle || null,
         secondary_influence_style: secondaryStyle || null,
-      })
+      });
 
       if (profileError) {
-        throw profileError
+        throw profileError;
       }
 
-      setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      setSuccess(true);
+      setTimeout(() => setSuccess(false), 3000);
     } catch (error) {
-      console.error("Error updating profile:", error)
-      alert("Failed to update profile. Please try again.")
+      console.error("Error updating profile:", error);
+      alert("Failed to update profile. Please try again.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getUserInitials = () => {
     if (firstName && lastName) {
-      return `${firstName[0]}${lastName[0]}`.toUpperCase()
+      return `${firstName[0]}${lastName[0]}`.toUpperCase();
     }
     if (user?.user_metadata?.full_name) {
-      const names = user.user_metadata.full_name.split(" ")
-      return names.length > 1 ? `${names[0][0]}${names[1][0]}` : names[0][0]
+      const names = user.user_metadata.full_name.split(" ");
+      return names.length > 1 ? `${names[0][0]}${names[1][0]}` : names[0][0];
     }
     if (user?.email) {
-      return user.email[0].toUpperCase()
+      return user.email[0].toUpperCase();
     }
-    return "U"
-  }
+    return "U";
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const getInfluenceStyleIcon = (styleId: string) => {
-    const style = influenceStyles.find((s) => s.id === styleId)
-    return style ? style.icon : null
-  }
+    const style = influenceStyles.find((s) => s.id === styleId);
+    return style ? style.icon : null;
+  };
 
   const getInfluenceStyleColor = (styleId: string) => {
-    const style = influenceStyles.find((s) => s.id === styleId)
-    return style ? style.color : "bg-gray-500"
-  }
+    const style = influenceStyles.find((s) => s.id === styleId);
+    return style ? style.color : "bg-gray-500";
+  };
 
   const getInfluenceStyleName = (styleId: string) => {
-    const style = influenceStyles.find((s) => s.id === styleId)
-    return style ? style.name : ""
-  }
+    const style = influenceStyles.find((s) => s.id === styleId);
+    return style ? style.name : "";
+  };
 
   const getCurrentInfluenceDisplay = () => {
-    if (!primaryStyle) return null
+    if (!primaryStyle) return null;
 
     if (secondaryStyle) {
       return (
         <div className="flex items-start space-x-2">
           <div className="flex flex-col items-center space-y-1">
             <div
-              className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(primaryStyle)} flex items-center justify-center text-white`}
+              className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(
+                primaryStyle
+              )} flex items-center justify-center text-white`}
             >
               {getInfluenceStyleIcon(primaryStyle)}
             </div>
-            <span className="text-xs font-medium text-gray-700 text-center">{getInfluenceStyleName(primaryStyle)}</span>
+            <span className="text-xs font-medium text-gray-700 text-center">
+              {getInfluenceStyleName(primaryStyle)}
+            </span>
           </div>
           <div className="flex flex-col items-center justify-center h-10">
             <span className="text-sm font-medium text-gray-500">+</span>
           </div>
           <div className="flex flex-col items-center space-y-1">
             <div
-              className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(secondaryStyle)} flex items-center justify-center text-white`}
+              className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(
+                secondaryStyle
+              )} flex items-center justify-center text-white`}
             >
               {getInfluenceStyleIcon(secondaryStyle)}
             </div>
@@ -301,27 +337,31 @@ export default function Profile() {
             <p className="text-xs text-gray-600">Blended Influence Style</p>
           </div>
         </div>
-      )
+      );
     }
 
     return (
       <div className="flex items-center space-x-3">
         <div
-          className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(primaryStyle)} flex items-center justify-center text-white`}
+          className={`w-10 h-10 rounded-full ${getInfluenceStyleColor(
+            primaryStyle
+          )} flex items-center justify-center text-white`}
         >
           {getInfluenceStyleIcon(primaryStyle)}
         </div>
         <div>
-          <p className="font-semibold text-gray-900">{getInfluenceStyleName(primaryStyle)}</p>
+          <p className="font-semibold text-gray-900">
+            {getInfluenceStyleName(primaryStyle)}
+          </p>
           <p className="text-sm text-gray-600">Primary Influence Style</p>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   const getAvailableSecondaryStyles = () => {
-    return influenceStyles.filter((style) => style.id !== primaryStyle)
-  }
+    return influenceStyles.filter((style) => style.id !== primaryStyle);
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -346,7 +386,9 @@ export default function Profile() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Chat
             </Button>
-            <h1 className="text-2xl font-bold text-gray-900">Profile Settings</h1>
+            <h1 className="text-2xl font-bold text-gray-900">
+              Profile Settings
+            </h1>
             <div className="w-24"></div> {/* Spacer */}
           </div>
         </div>
@@ -391,19 +433,30 @@ export default function Profile() {
                   )}
                 </div>
               </div>
-              <CardTitle className="text-xl">{firstName && lastName ? `${firstName} ${lastName}` : "User"}</CardTitle>
+              <CardTitle className="text-xl">
+                {firstName && lastName ? `${firstName} ${lastName}` : "User"}
+              </CardTitle>
               <p className="text-gray-600">{user?.email}</p>
-              <p className="text-xs text-gray-500 mt-2">Click avatar to change picture</p>
+              <p className="text-xs text-gray-500 mt-2">
+                Click avatar to change picture
+              </p>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {user?.created_at ? formatDate(user.created_at) : "Recently"}</span>
+                  <span>
+                    Joined{" "}
+                    {user?.created_at
+                      ? formatDate(user.created_at)
+                      : "Recently"}
+                  </span>
                 </div>
                 <div className="flex items-center space-x-3 text-sm text-gray-600">
                   <Shield className="w-4 h-4" />
-                  <span>Email {user?.email_confirmed_at ? "Verified" : "Pending"}</span>
+                  <span>
+                    Email {user?.email_confirmed_at ? "Verified" : "Pending"}
+                  </span>
                 </div>
 
                 {/* Current Influence Style Display */}
@@ -411,7 +464,9 @@ export default function Profile() {
                   <div className="pt-4 border-t border-gray-200">
                     <div className="flex items-center space-x-2 mb-3">
                       <Sparkles className="w-4 h-4 text-[#92278F]" />
-                      <span className="text-sm font-medium text-gray-700">Current Style</span>
+                      <span className="text-sm font-medium text-gray-700">
+                        Current Style
+                      </span>
                     </div>
                     {getCurrentInfluenceDisplay()}
                   </div>
@@ -429,7 +484,9 @@ export default function Profile() {
               <form onSubmit={handleUpdateProfile} className="space-y-6">
                 {success && (
                   <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">Profile updated successfully!</p>
+                    <p className="text-sm text-green-700">
+                      Profile updated successfully!
+                    </p>
                   </div>
                 )}
 
@@ -442,7 +499,10 @@ export default function Profile() {
                   {/* First Name and Last Name Row */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="firstName"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         First Name <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -460,7 +520,10 @@ export default function Profile() {
                     </div>
 
                     <div>
-                      <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label
+                        htmlFor="lastName"
+                        className="block text-sm font-medium text-gray-700 mb-2"
+                      >
                         Last Name <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -479,7 +542,10 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <label htmlFor="userName" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="userName"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Username <span className="text-gray-400">(Optional)</span>
                     </label>
                     <div className="relative">
@@ -496,7 +562,10 @@ export default function Profile() {
                   </div>
 
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label
+                      htmlFor="email"
+                      className="block text-sm font-medium text-gray-700 mb-2"
+                    >
                       Email Address
                     </label>
                     <div className="relative">
@@ -510,7 +579,8 @@ export default function Profile() {
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
-                      Email cannot be changed. Contact support if you need to update your email.
+                      Email cannot be changed. Contact support if you need to
+                      update your email.
                     </p>
                   </div>
                 </div>
@@ -518,23 +588,32 @@ export default function Profile() {
                 {/* Influence Style Selection */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
-                    Influence Style <span className="text-gray-400">(Optional)</span>
+                    Influence Style{" "}
+                    <span className="text-gray-400">(Optional)</span>
                   </h3>
 
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <p className="text-sm text-blue-700 mb-2">
-                      <strong>Your influence style shapes how the AI coaches you.</strong>
+                      <strong>
+                        Your influence style shapes how the AI coaches you.
+                      </strong>
                     </p>
                     <p className="text-xs text-blue-600">
-                      Choose a primary style and optionally add a secondary style for a blended approach. You can skip
-                      this for now and set it up later.
+                      Choose a primary style and optionally add a secondary
+                      style for a blended approach. You can skip this for now
+                      and set it up later.
                     </p>
                   </div>
 
                   {/* Primary Style */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">Primary Influence Style</label>
-                    <Select value={primaryStyle} onValueChange={setPrimaryStyle}>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Primary Influence Style
+                    </label>
+                    <Select
+                      value={primaryStyle}
+                      onValueChange={setPrimaryStyle}
+                    >
                       <SelectTrigger className="h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]">
                         <SelectValue placeholder="Select your primary influence style (optional)" />
                       </SelectTrigger>
@@ -549,7 +628,9 @@ export default function Profile() {
                               </div>
                               <div>
                                 <p className="font-medium">{style.name}</p>
-                                <p className="text-xs text-gray-600">{style.description}</p>
+                                <p className="text-xs text-gray-600">
+                                  {style.description}
+                                </p>
                               </div>
                             </div>
                           </SelectItem>
@@ -562,10 +643,14 @@ export default function Profile() {
                   {primaryStyle && (
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Secondary Influence Style <span className="text-gray-400">(Optional)</span>
+                        Secondary Influence Style{" "}
+                        <span className="text-gray-400">(Optional)</span>
                       </label>
                       <div className="flex space-x-2">
-                        <Select value={secondaryStyle} onValueChange={setSecondaryStyle}>
+                        <Select
+                          value={secondaryStyle}
+                          onValueChange={setSecondaryStyle}
+                        >
                           <SelectTrigger className="h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]">
                             <SelectValue placeholder="Add a secondary style for blended approach" />
                           </SelectTrigger>
@@ -580,7 +665,9 @@ export default function Profile() {
                                   </div>
                                   <div>
                                     <p className="font-medium">{style.name}</p>
-                                    <p className="text-xs text-gray-600">{style.description}</p>
+                                    <p className="text-xs text-gray-600">
+                                      {style.description}
+                                    </p>
                                   </div>
                                 </div>
                               </SelectItem>
@@ -600,7 +687,8 @@ export default function Profile() {
                         )}
                       </div>
                       <p className="text-xs text-gray-500 mt-1">
-                        Adding a secondary style creates a blended approach that combines both influence methods.
+                        Adding a secondary style creates a blended approach that
+                        combines both influence methods.
                       </p>
                     </div>
                   )}
@@ -608,7 +696,9 @@ export default function Profile() {
                   {/* Live Preview */}
                   {primaryStyle && (
                     <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                      <h4 className="text-sm font-medium text-gray-700 mb-3">Preview Your Style</h4>
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">
+                        Preview Your Style
+                      </h4>
                       {getCurrentInfluenceDisplay()}
                     </div>
                   )}
@@ -637,5 +727,5 @@ export default function Profile() {
         </div>
       </div>
     </div>
-  )
+  );
 }

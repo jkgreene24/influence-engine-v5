@@ -1,28 +1,38 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Check, Crown, CreditCard, Calendar, DollarSign, AlertTriangle, Loader2, Shield } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  Check,
+  Crown,
+  CreditCard,
+  Calendar,
+  DollarSign,
+  AlertTriangle,
+  Loader2,
+  Shield,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface SubscriptionData {
-  id: string
-  status: string
-  current_period_end: number
-  current_period_start: number
-  amount: number
-  currency: string
-  interval: string
-  trial_end?: number
-  cancel_at_period_end: boolean
+  id: string;
+  status: string;
+  current_period_end: number;
+  current_period_start: number;
+  amount: number;
+  currency: string;
+  interval: string;
+  trial_end?: number;
+  cancel_at_period_end: boolean;
   payment_method?: {
-    brand: string
-    last4: string
-    exp_month: number
-    exp_year: number
-  }
+    brand: string;
+    last4: string;
+    exp_month: number;
+    exp_year: number;
+  };
 }
 
 const plans = [
@@ -32,7 +42,12 @@ const plans = [
     price: 0,
     interval: "forever",
     description: "Perfect for getting started",
-    features: ["5 AI conversations per day", "Basic influence style coaching", "Email support", "Community access"],
+    features: [
+      "5 AI conversations per day",
+      "Basic influence style coaching",
+      "Email support",
+      "Community access",
+    ],
     popular: false,
     stripePriceId: null,
   },
@@ -71,127 +86,158 @@ const plans = [
     stripePriceId: "price_yearly_290",
     savings: "Save $58",
   },
-]
+];
 
 export default function Subscription() {
-  const [user, setUser] = useState<any>(null)
-  const [profile, setProfile] = useState<any>(null)
-  const [subscriptionData, setSubscriptionData] = useState<SubscriptionData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [subscriptionData, setSubscriptionData] =
+    useState<SubscriptionData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchUserAndSubscription = async () => {
       try {
-        const supabase = createClient()
+        const supabase = createClient();
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = await supabase.auth.getUser();
 
         if (user) {
-          setUser(user)
+          setUser(user);
 
           // Fetch profile data
-          const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+          const { data: profileData } = await supabase
+            .from("profiles")
+            .select("*")
+            .eq("id", user.id)
+            .single();
           if (profileData) {
-            setProfile(profileData)
+            setProfile(profileData);
           }
 
           // Fetch subscription status from Stripe
-          const response = await fetch("/api/subscription/status")
+          const response = await fetch("/api/subscription/status");
           if (response.ok) {
-            const data = await response.json()
-            setSubscriptionData(data.subscription)
+            const data = await response.json();
+            setSubscriptionData(data.subscription);
           } else {
-            console.error("Failed to fetch subscription data")
+            console.error("Failed to fetch subscription data");
           }
         }
       } catch (err) {
-        console.error("Error fetching data:", err)
-        setError("Failed to load subscription information")
+        console.error("Error fetching data:", err);
+        setError("Failed to load subscription information");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
-    }
+    };
 
-    fetchUserAndSubscription()
-  }, [])
+    fetchUserAndSubscription();
+  }, []);
 
   const getUserInitials = () => {
     // First try to get initials from profile data
     if (profile?.first_name && profile?.last_name) {
-      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase()
+      return `${profile.first_name[0]}${profile.last_name[0]}`.toUpperCase();
     }
 
     // Fallback to auth metadata
     if (user?.user_metadata?.first_name && user?.user_metadata?.last_name) {
-      return `${user.user_metadata.first_name[0]}${user.user_metadata.last_name[0]}`.toUpperCase()
+      return `${user.user_metadata.first_name[0]}${user.user_metadata.last_name[0]}`.toUpperCase();
     }
 
     // Fallback to full name
     if (user?.user_metadata?.full_name) {
-      const names = user.user_metadata.full_name.split(" ")
-      return names.length > 1 ? `${names[0][0]}${names[1][0]}`.toUpperCase() : names[0][0].toUpperCase()
+      const names = user.user_metadata.full_name.split(" ");
+      return names.length > 1
+        ? `${names[0][0]}${names[1][0]}`.toUpperCase()
+        : names[0][0].toUpperCase();
     }
 
     // Final fallback to email
     if (user?.email) {
-      return user.email[0].toUpperCase()
+      return user.email[0].toUpperCase();
     }
 
-    return "U"
-  }
+    return "U";
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "active":
-        return <Badge className="bg-green-100 text-green-800 border-green-200">Active</Badge>
+        return (
+          <Badge className="bg-green-100 text-green-800 border-green-200">
+            Active
+          </Badge>
+        );
       case "trialing":
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200">Trial</Badge>
+        return (
+          <Badge className="bg-blue-100 text-blue-800 border-blue-200">
+            Trial
+          </Badge>
+        );
       case "past_due":
-        return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">Past Due</Badge>
+        return (
+          <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200">
+            Past Due
+          </Badge>
+        );
       case "canceled":
-        return <Badge className="bg-red-100 text-red-800 border-red-200">Canceled</Badge>
+        return (
+          <Badge className="bg-red-100 text-red-800 border-red-200">
+            Canceled
+          </Badge>
+        );
       case "incomplete":
-        return <Badge className="bg-orange-100 text-orange-800 border-orange-200">Incomplete</Badge>
+        return (
+          <Badge className="bg-orange-100 text-orange-800 border-orange-200">
+            Incomplete
+          </Badge>
+        );
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200">Free</Badge>
+        return (
+          <Badge className="bg-gray-100 text-gray-800 border-gray-200">
+            Free
+          </Badge>
+        );
     }
-  }
+  };
 
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString("en-US", {
       year: "numeric",
       month: "long",
       day: "numeric",
-    })
-  }
+    });
+  };
 
   const formatAmount = (amount: number, currency: string) => {
     return new Intl.NumberFormat("en-US", {
       style: "currency",
       currency: currency.toUpperCase(),
-    }).format(amount / 100)
-  }
+    }).format(amount / 100);
+  };
 
   const getCurrentPlan = () => {
-    if (!subscriptionData) return plans[0] // Free plan
+    if (!subscriptionData) return plans[0]; // Free plan
 
     if (subscriptionData.interval === "month") {
-      return plans.find((p) => p.id === "monthly") || plans[0]
+      return plans.find((p) => p.id === "monthly") || plans[0];
     } else if (subscriptionData.interval === "year") {
-      return plans.find((p) => p.id === "yearly") || plans[0]
+      return plans.find((p) => p.id === "yearly") || plans[0];
     }
 
-    return plans[0]
-  }
+    return plans[0];
+  };
 
   const handleSubscribe = async (planId: string) => {
-    if (planId === "free") return
+    if (planId === "free") return;
 
     try {
-      const plan = plans.find((p) => p.id === planId)
-      if (!plan?.stripePriceId) return
+      const plan = plans.find((p) => p.id === planId);
+      if (!plan?.stripePriceId) return;
 
       const response = await fetch("/api/subscription/create", {
         method: "POST",
@@ -201,16 +247,16 @@ export default function Subscription() {
         body: JSON.stringify({
           priceId: plan.stripePriceId,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
       if (data.url) {
-        window.location.href = data.url
+        window.location.href = data.url;
       }
     } catch (error) {
-      console.error("Error creating subscription:", error)
+      console.error("Error creating subscription:", error);
     }
-  }
+  };
 
   if (loading) {
     return (
@@ -220,10 +266,10 @@ export default function Subscription() {
           <p className="text-gray-600">Loading subscription information...</p>
         </div>
       </div>
-    )
+    );
   }
 
-  const currentPlan = getCurrentPlan()
+  const currentPlan = getCurrentPlan();
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -269,7 +315,9 @@ export default function Subscription() {
                   )}
                 </div>
                 <div>
-                  <h3 className="text-xl font-semibold text-gray-900">{currentPlan.name} Plan</h3>
+                  <h3 className="text-xl font-semibold text-gray-900">
+                    {currentPlan.name} Plan
+                  </h3>
                   <p className="text-gray-600">{currentPlan.description}</p>
                   <div className="flex items-center space-x-2 mt-2">
                     {getStatusBadge(subscriptionData?.status || "free")}
@@ -284,7 +332,11 @@ export default function Subscription() {
               <div className="text-right">
                 <div className="text-2xl font-bold text-gray-900">
                   {currentPlan.price === 0 ? "Free" : `$${currentPlan.price}`}
-                  {currentPlan.price > 0 && <span className="text-sm text-gray-500">/{currentPlan.interval}</span>}
+                  {currentPlan.price > 0 && (
+                    <span className="text-sm text-gray-500">
+                      /{currentPlan.interval}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -297,7 +349,9 @@ export default function Subscription() {
                     <Shield className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Subscription ID</p>
-                      <p className="font-medium text-gray-900">{subscriptionData.id.slice(-8)}</p>
+                      <p className="font-medium text-gray-900">
+                        {subscriptionData.id.slice(-8)}
+                      </p>
                     </div>
                   </div>
 
@@ -305,7 +359,9 @@ export default function Subscription() {
                     <Calendar className="w-5 h-5 text-gray-400" />
                     <div>
                       <p className="text-sm text-gray-500">Next Billing</p>
-                      <p className="font-medium text-gray-900">{formatDate(subscriptionData.current_period_end)}</p>
+                      <p className="font-medium text-gray-900">
+                        {formatDate(subscriptionData.current_period_end)}
+                      </p>
                     </div>
                   </div>
 
@@ -314,7 +370,11 @@ export default function Subscription() {
                     <div>
                       <p className="text-sm text-gray-500">Amount</p>
                       <p className="font-medium text-gray-900">
-                        {formatAmount(subscriptionData.amount, subscriptionData.currency)} / {subscriptionData.interval}
+                        {formatAmount(
+                          subscriptionData.amount,
+                          subscriptionData.currency
+                        )}{" "}
+                        / {subscriptionData.interval}
                       </p>
                     </div>
                   </div>
@@ -325,7 +385,8 @@ export default function Subscription() {
                       <div>
                         <p className="text-sm text-gray-500">Payment Method</p>
                         <p className="font-medium text-gray-900">
-                          {subscriptionData.payment_method.brand.toUpperCase()} ****
+                          {subscriptionData.payment_method.brand.toUpperCase()}{" "}
+                          ****
                           {subscriptionData.payment_method.last4}
                         </p>
                       </div>
@@ -337,10 +398,13 @@ export default function Subscription() {
                   <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start space-x-2">
                     <AlertTriangle className="w-5 h-5 text-yellow-600 mt-0.5" />
                     <div>
-                      <p className="text-sm font-medium text-yellow-800">Subscription Ending</p>
+                      <p className="text-sm font-medium text-yellow-800">
+                        Subscription Ending
+                      </p>
                       <p className="text-sm text-yellow-700">
-                        Your subscription will end on {formatDate(subscriptionData.current_period_end)}. You'll still
-                        have access until then.
+                        Your subscription will end on{" "}
+                        {formatDate(subscriptionData.current_period_end)}.
+                        You'll still have access until then.
                       </p>
                     </div>
                   </div>
@@ -352,35 +416,53 @@ export default function Subscription() {
 
         {/* Available Plans */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Choose Your Plan</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">
+            Choose Your Plan
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {plans.map((plan) => (
               <Card
                 key={plan.id}
                 className={`relative ${
-                  plan.popular ? "border-[#92278F] border-2 shadow-lg" : "border-gray-200"
-                } ${currentPlan.id === plan.id ? "ring-2 ring-[#92278F] ring-opacity-50" : ""}`}
+                  plan.popular
+                    ? "border-[#92278F] border-2 shadow-lg"
+                    : "border-gray-200"
+                } ${
+                  currentPlan.id === plan.id
+                    ? "ring-2 ring-[#92278F] ring-opacity-50"
+                    : ""
+                }`}
               >
                 {plan.popular && (
                   <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <Badge className="bg-[#92278F] text-white px-3 py-1">Most Popular</Badge>
+                    <Badge className="bg-[#92278F] text-white px-3 py-1">
+                      Most Popular
+                    </Badge>
                   </div>
                 )}
                 {plan.savings && (
                   <div className="absolute -top-3 right-4">
-                    <Badge className="bg-green-500 text-white px-2 py-1 text-xs">{plan.savings}</Badge>
+                    <Badge className="bg-green-500 text-white px-2 py-1 text-xs">
+                      {plan.savings}
+                    </Badge>
                   </div>
                 )}
 
                 <CardHeader className="text-center pb-4">
-                  <CardTitle className="text-xl font-bold text-gray-900">{plan.name}</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900">
+                    {plan.name}
+                  </CardTitle>
                   <div className="mt-2">
                     <span className="text-3xl font-bold text-gray-900">
                       {plan.price === 0 ? "Free" : `$${plan.price}`}
                     </span>
-                    {plan.price > 0 && <span className="text-gray-500">/{plan.interval}</span>}
+                    {plan.price > 0 && (
+                      <span className="text-gray-500">/{plan.interval}</span>
+                    )}
                   </div>
-                  <p className="text-sm text-gray-600 mt-2">{plan.description}</p>
+                  <p className="text-sm text-gray-600 mt-2">
+                    {plan.description}
+                  </p>
                 </CardHeader>
 
                 <CardContent className="pt-0">
@@ -400,9 +482,17 @@ export default function Subscription() {
                       plan.popular
                         ? "bg-[#92278F] hover:bg-[#7a1f78] text-white"
                         : "bg-gray-100 hover:bg-gray-200 text-gray-900"
-                    } ${currentPlan.id === plan.id ? "opacity-50 cursor-not-allowed" : ""}`}
+                    } ${
+                      currentPlan.id === plan.id
+                        ? "opacity-50 cursor-not-allowed"
+                        : ""
+                    }`}
                   >
-                    {currentPlan.id === plan.id ? "Current Plan" : plan.price === 0 ? "Current Plan" : "Upgrade"}
+                    {currentPlan.id === plan.id
+                      ? "Current Plan"
+                      : plan.price === 0
+                      ? "Current Plan"
+                      : "Upgrade"}
                   </Button>
                 </CardContent>
               </Card>
@@ -426,14 +516,15 @@ export default function Subscription() {
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700">Payment Method</span>
                     <span className="font-medium">
-                      {subscriptionData.payment_method.brand.toUpperCase()} ending in{" "}
-                      {subscriptionData.payment_method.last4}
+                      {subscriptionData.payment_method.brand.toUpperCase()}{" "}
+                      ending in {subscriptionData.payment_method.last4}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-700">Expires</span>
                     <span className="font-medium">
-                      {subscriptionData.payment_method.exp_month}/{subscriptionData.payment_method.exp_year}
+                      {subscriptionData.payment_method.exp_month}/
+                      {subscriptionData.payment_method.exp_year}
                     </span>
                   </div>
                 </>
@@ -448,5 +539,5 @@ export default function Subscription() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

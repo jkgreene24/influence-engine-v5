@@ -1,10 +1,10 @@
-"use client"
-import { useState, useEffect } from "react"
+"use client";
+import { useState, useEffect } from "react";
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Search,
   MessageCircle,
@@ -19,55 +19,55 @@ import {
   Save,
   X,
   Home,
-} from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
-import { Textarea } from "@/components/ui/textarea"
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { Textarea } from "@/components/ui/textarea";
 
 interface User {
-  user_uuid: string
-  user_name: string
-  user_influence_style: string // Changed from specific union to string to support blended styles
-  avatar: string
-  status: "online" | "offline" | "away"
-  color: string
+  user_uuid: string;
+  user_name: string;
+  user_influence_style: string; // Changed from specific union to string to support blended styles
+  avatar: string;
+  status: "online" | "offline" | "away";
+  color: string;
 }
 
 const getRandomInfluenceStyle = () => {
-  const styles = ["catalyst", "diplomat", "anchor", "connector", "navigator"]
+  const styles = ["catalyst", "diplomat", "anchor", "connector", "navigator"];
 
   // 60% chance for blended style, 40% chance for single style
-  const isBlended = Math.random() < 0.6
+  const isBlended = Math.random() < 0.6;
 
   if (isBlended) {
     // Generate blended style
-    const shuffled = [...styles].sort(() => 0.5 - Math.random())
-    return `${shuffled[0]}-${shuffled[1]}`
+    const shuffled = [...styles].sort(() => 0.5 - Math.random());
+    return `${shuffled[0]}-${shuffled[1]}`;
   } else {
     // Generate single style
-    return styles[Math.floor(Math.random() * styles.length)]
+    return styles[Math.floor(Math.random() * styles.length)];
   }
-}
+};
 
 const getInfluenceIcon = (style: string) => {
-  const styles = style.split("-")
-  const primaryStyle = styles[0]
+  const styles = style.split("-");
+  const primaryStyle = styles[0];
 
   const getIcon = (singleStyle: string) => {
     switch (singleStyle) {
       case "catalyst":
-        return <Zap className="w-4 h-4" />
+        return <Zap className="w-4 h-4" />;
       case "diplomat":
-        return <Users className="w-4 h-4" />
+        return <Users className="w-4 h-4" />;
       case "anchor":
-        return <Anchor className="w-4 h-4" />
+        return <Anchor className="w-4 h-4" />;
       case "connector":
-        return <Link className="w-4 h-4" />
+        return <Link className="w-4 h-4" />;
       case "navigator":
-        return <Navigation className="w-4 h-4" />
+        return <Navigation className="w-4 h-4" />;
       default:
-        return <MessageCircle className="w-4 h-4" />
+        return <MessageCircle className="w-4 h-4" />;
     }
-  }
+  };
 
   // For blended styles, show both icons with plus
   if (styles.length === 2) {
@@ -77,12 +77,12 @@ const getInfluenceIcon = (style: string) => {
         <span className="text-xs">+</span>
         {getIcon(styles[1])}
       </div>
-    )
+    );
   }
 
   // For single styles, show just the icon
-  return getIcon(primaryStyle)
-}
+  return getIcon(primaryStyle);
+};
 
 const getRandomColor = (index: number) => {
   const colors = [
@@ -96,37 +96,43 @@ const getRandomColor = (index: number) => {
     "bg-red-500",
     "bg-yellow-500",
     "bg-cyan-500",
-  ]
-  return colors[index % colors.length]
-}
+  ];
+  return colors[index % colors.length];
+};
 
 const getRandomStatus = () => {
-  const statuses: ("online" | "offline" | "away")[] = ["online", "offline", "away"]
-  return statuses[Math.floor(Math.random() * statuses.length)]
-}
+  const statuses: ("online" | "offline" | "away")[] = [
+    "online",
+    "offline",
+    "away",
+  ];
+  return statuses[Math.floor(Math.random() * statuses.length)];
+};
 
 const generateAvatar = (name: string) => {
-  const words = name.split(" ")
+  const words = name.split(" ");
   if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase()
+    return (words[0][0] + words[1][0]).toUpperCase();
   }
-  return name.substring(0, 2).toUpperCase()
-}
+  return name.substring(0, 2).toUpperCase();
+};
 
 const validateEnvironment = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   console.log("Environment check:", {
     hasUrl: !!supabaseUrl,
     hasKey: !!supabaseKey,
-    urlPreview: supabaseUrl ? supabaseUrl.substring(0, 20) + "..." : "undefined",
-  })
+    urlPreview: supabaseUrl
+      ? supabaseUrl.substring(0, 20) + "..."
+      : "undefined",
+  });
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error(
-      "Missing Supabase environment variables. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file.",
-    )
+      "Missing Supabase environment variables. Please add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY to your .env.local file."
+    );
   }
 
   // Check for common placeholder patterns
@@ -136,43 +142,48 @@ const validateEnvironment = () => {
     "your-project-id.supabase.co",
     "your-actual-anon-key-here",
     "https://your-project.supabase.co",
-  ]
+  ];
 
   const isPlaceholder = placeholderPatterns.some(
-    (pattern) => supabaseUrl.includes(pattern) || supabaseKey.includes(pattern),
-  )
+    (pattern) => supabaseUrl.includes(pattern) || supabaseKey.includes(pattern)
+  );
 
   if (isPlaceholder) {
     throw new Error(
-      "Please replace the placeholder values in your .env.local file with your actual Supabase URL and anon key.",
-    )
+      "Please replace the placeholder values in your .env.local file with your actual Supabase URL and anon key."
+    );
   }
 
   // Basic URL validation
   try {
-    new URL(supabaseUrl)
+    new URL(supabaseUrl);
   } catch {
     throw new Error(
-      "Invalid Supabase URL format. Please ensure your NEXT_PUBLIC_SUPABASE_URL is a valid URL (e.g., https://abcdefgh.supabase.co)",
-    )
+      "Invalid Supabase URL format. Please ensure your NEXT_PUBLIC_SUPABASE_URL is a valid URL (e.g., https://abcdefgh.supabase.co)"
+    );
   }
 
-  return { supabaseUrl, supabaseKey }
-}
+  return { supabaseUrl, supabaseKey };
+};
 
 export default function AdminDashboard() {
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [showSettings, setShowSettings] = useState(false)
-  const [systemInstruction, setSystemInstruction] = useState("")
-  const [fineTuningFile, setFineTuningFile] = useState<File | null>(null)
-  const [settingsLoading, setSettingsLoading] = useState(false)
-  const [fineTuningData, setFineTuningData] = useState("")
-  const [ingestLoading, setIngestLoading] = useState(false)
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null)
-  const [fineTuningDataType, setFineTuningDataType] = useState<"message" | "text" | "json">("message")
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showSettings, setShowSettings] = useState(false);
+  const [systemInstruction, setSystemInstruction] = useState("");
+  const [fineTuningFile, setFineTuningFile] = useState<File | null>(null);
+  const [settingsLoading, setSettingsLoading] = useState(false);
+  const [fineTuningData, setFineTuningData] = useState("");
+  const [ingestLoading, setIngestLoading] = useState(false);
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const [fineTuningDataType, setFineTuningDataType] = useState<
+    "message" | "text" | "json"
+  >("message");
 
   const getPlaceholderText = (type: "message" | "text" | "json") => {
     switch (type) {
@@ -180,11 +191,11 @@ export default function AdminDashboard() {
         return `Customer: Hi, I'm having trouble with my Allbirds shoes. The sole is coming off after only 2 months of use.
 Support: I'm sorry to hear that. Can you please provide your order number?
 Customer: My order number is AB-2024-001234.
-Support: Thank you. I can see your order here. Since this happened within our warranty period, we'll send you a replacement pair right away.`
+Support: Thank you. I can see your order here. Since this happened within our warranty period, we'll send you a replacement pair right away.`;
       case "text":
         return `MIT researchers have unveiled 'ClimateNet', an AI system capable of predicting climate patterns with unprecedented accuracy. Early tests show it can forecast major weather events up to three weeks in advance, potentially revolutionizing disaster preparedness and agricultural planning.
 
-The system uses advanced machine learning algorithms trained on decades of meteorological data from around the globe. Unlike traditional weather models that rely primarily on atmospheric conditions, ClimateNet incorporates ocean temperatures, solar radiation patterns, and even vegetation changes to create more comprehensive predictions.`
+The system uses advanced machine learning algorithms trained on decades of meteorological data from around the globe. Unlike traditional weather models that rely primarily on atmospheric conditions, ClimateNet incorporates ocean temperatures, solar radiation patterns, and even vegetation changes to create more comprehensive predictions.`;
       case "json":
         return `{
   "id": "PROD001",
@@ -208,44 +219,46 @@ The system uses advanced machine learning algorithms trained on decades of meteo
   "price": 98.00,
   "in_stock": false,
   "last_updated": "2024-03-15T10:30:00Z"
-}`
+}`;
     }
-  }
+  };
 
   useEffect(() => {
-    fetchUsers()
-  }, [])
+    fetchUsers();
+  }, []);
 
   useEffect(() => {
     // Load saved settings from localStorage
-    const savedSystemInstruction = localStorage.getItem("openai_system_instruction")
+    const savedSystemInstruction = localStorage.getItem(
+      "openai_system_instruction"
+    );
     if (savedSystemInstruction) {
-      setSystemInstruction(savedSystemInstruction)
+      setSystemInstruction(savedSystemInstruction);
     }
 
-    const savedFineTuningData = localStorage.getItem("fine_tuning_data")
+    const savedFineTuningData = localStorage.getItem("fine_tuning_data");
     if (savedFineTuningData) {
-      setFineTuningData(savedFineTuningData)
+      setFineTuningData(savedFineTuningData);
     }
-  }, [])
+  }, []);
 
   const fetchUsers = async () => {
     try {
-      setLoading(true)
-      setError(null)
+      setLoading(true);
+      setError(null);
 
       // Validate environment variables first
-      validateEnvironment()
+      validateEnvironment();
 
-      const supabase = createClient()
+      const supabase = createClient();
 
       const { data, error } = await supabase
         .from("user_table")
         .select("user_uuid, user_name, user_influence_style")
-        .order("user_name")
+        .order("user_name");
 
       if (error) {
-        throw error
+        throw error;
       }
 
       const formattedUsers: User[] = data.map((user, index) => ({
@@ -255,22 +268,22 @@ The system uses advanced machine learning algorithms trained on decades of meteo
         avatar: generateAvatar(user.user_name),
         status: getRandomStatus(),
         color: getRandomColor(index),
-      }))
+      }));
 
-      setUsers(formattedUsers)
+      setUsers(formattedUsers);
     } catch (err) {
-      console.error("Error fetching users:", err)
-      setError(err instanceof Error ? err.message : "Failed to fetch users")
+      console.error("Error fetching users:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch users");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const filteredUsers = users.filter(
     (user) =>
       user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.user_influence_style.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      user.user_influence_style.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const handleUserClick = (user: User) => {
     // Store user data in localStorage for the admin chat interface
@@ -283,81 +296,89 @@ The system uses advanced machine learning algorithms trained on decades of meteo
         avatar: user.avatar,
         status: user.status,
         color: user.color,
-      }),
-    )
+      })
+    );
     // Navigate to admin chat interface
-    window.location.href = "/admin/chat"
-  }
+    window.location.href = "/admin/chat";
+  };
 
   const handleGoToHome = () => {
-    window.location.href = "/"
-  }
+    window.location.href = "/";
+  };
 
   const handleSaveSettings = async () => {
-    setSettingsLoading(true)
+    setSettingsLoading(true);
     try {
       // Save system instruction to localStorage
-      localStorage.setItem("openai_system_instruction", systemInstruction)
+      localStorage.setItem("openai_system_instruction", systemInstruction);
 
       // Show success message
-      alert("Settings saved successfully!")
-      setShowSettings(false)
+      alert("Settings saved successfully!");
+      setShowSettings(false);
     } catch (error) {
-      console.error("Error saving settings:", error)
-      alert("Error saving settings. Please try again.")
+      console.error("Error saving settings:", error);
+      alert("Error saving settings. Please try again.");
     } finally {
-      setSettingsLoading(false)
+      setSettingsLoading(false);
     }
-  }
+  };
 
   const handleIngestData = async () => {
-    setIngestLoading(true)
+    setIngestLoading(true);
     try {
       // Validate data based on type
       if (fineTuningDataType === "json") {
         // For JSON, validate that it's proper JSON
-        JSON.parse(fineTuningData)
+        JSON.parse(fineTuningData);
       } else if (fineTuningDataType === "message") {
         // For message data, check if it has conversation patterns
-        if (!fineTuningData.includes(":") || fineTuningData.trim().length < 10) {
-          throw new Error("Message data should contain conversation patterns with speakers")
+        if (
+          !fineTuningData.includes(":") ||
+          fineTuningData.trim().length < 10
+        ) {
+          throw new Error(
+            "Message data should contain conversation patterns with speakers"
+          );
         }
       } else if (fineTuningDataType === "text") {
         // For text data, just check minimum length
         if (fineTuningData.trim().length < 50) {
-          throw new Error("Text data should be at least 50 characters long")
+          throw new Error("Text data should be at least 50 characters long");
         }
       }
 
       // Simulate API call to ingest data (replace with actual OpenAI API call)
-      await new Promise((resolve) => setTimeout(resolve, 2000))
+      await new Promise((resolve) => setTimeout(resolve, 2000));
 
       // Save to localStorage with type information
-      localStorage.setItem("fine_tuning_data", fineTuningData)
-      localStorage.setItem("fine_tuning_data_type", fineTuningDataType)
+      localStorage.setItem("fine_tuning_data", fineTuningData);
+      localStorage.setItem("fine_tuning_data_type", fineTuningDataType);
 
       setToast({
         type: "success",
-        message: `${fineTuningDataType.charAt(0).toUpperCase() + fineTuningDataType.slice(1)} data ingested successfully!`,
-      })
-      setFineTuningData("")
+        message: `${
+          fineTuningDataType.charAt(0).toUpperCase() +
+          fineTuningDataType.slice(1)
+        } data ingested successfully!`,
+      });
+      setFineTuningData("");
     } catch (error) {
       const errorMessage =
         error instanceof Error
           ? error.message
-          : `Invalid ${fineTuningDataType} format or ingestion failed. Please check your data.`
-      setToast({ type: "error", message: errorMessage })
+          : `Invalid ${fineTuningDataType} format or ingestion failed. Please check your data.`;
+      setToast({ type: "error", message: errorMessage });
     } finally {
-      setIngestLoading(false)
+      setIngestLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (toast) {
-      const timer = setTimeout(() => setToast(null), 5000)
-      return () => clearTimeout(timer)
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
     }
-  }, [toast])
+  }, [toast]);
 
   if (loading) {
     return (
@@ -367,7 +388,7 @@ The system uses advanced machine learning algorithms trained on decades of meteo
           <p className="font-inter text-gray-600">Loading users...</p>
         </div>
       </div>
-    )
+    );
   }
 
   if (error) {
@@ -377,7 +398,9 @@ The system uses advanced machine learning algorithms trained on decades of meteo
           <div className="text-red-500 mb-4">
             <MessageCircle className="w-16 h-16 mx-auto" />
           </div>
-          <h3 className="font-playfair text-xl text-gray-600 mb-2">Configuration Error</h3>
+          <h3 className="font-playfair text-xl text-gray-600 mb-2">
+            Configuration Error
+          </h3>
           <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
             <p className="font-inter text-sm text-red-700 text-left">{error}</p>
           </div>
@@ -391,7 +414,9 @@ The system uses advanced machine learning algorithms trained on decades of meteo
               <li>Navigate to Settings → API</li>
               <li>Copy your Project URL and anon/public key</li>
               <li>
-                Create/update your <code className="bg-blue-100 px-1 rounded">.env.local</code> file:
+                Create/update your{" "}
+                <code className="bg-blue-100 px-1 rounded">.env.local</code>{" "}
+                file:
               </li>
             </ol>
             <pre className="bg-blue-100 p-3 rounded mt-3 text-xs overflow-x-auto">
@@ -399,8 +424,8 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
             </pre>
             <p className="font-inter text-xs text-blue-600 mt-2">
-              <strong>Important:</strong> Make sure to restart your development server after adding environment
-              variables!
+              <strong>Important:</strong> Make sure to restart your development
+              server after adding environment variables!
             </p>
           </div>
 
@@ -411,12 +436,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
             </p>
           </div>
 
-          <Button onClick={fetchUsers} className="bg-[#92278F] hover:bg-[#7a1f78] text-white">
+          <Button
+            onClick={fetchUsers}
+            className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
+          >
             Try Again
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -442,7 +470,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                 className="w-16 h-16 rounded-full border-2 border-white/20"
               />
               <div className="text-center">
-                <h1 className="font-playfair text-4xl font-bold">Admin Dashboard</h1>
+                <h1 className="font-playfair text-4xl font-bold">
+                  Admin Dashboard
+                </h1>
                 <p className="font-inter text-lg opacity-90 mt-2">
                   Monitor and manage user conversations with AI assistance
                 </p>
@@ -496,8 +526,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                         user.status === "online"
                           ? "bg-green-500"
                           : user.status === "away"
-                            ? "bg-yellow-500"
-                            : "bg-gray-400"
+                          ? "bg-yellow-500"
+                          : "bg-gray-400"
                       }`}
                     />
                   </div>
@@ -505,7 +535,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                     <CardTitle className="font-inter text-lg text-black group-hover:text-[#92278F] transition-colors capitalize">
                       {user.user_name}
                     </CardTitle>
-                    <p className="text-sm text-gray-600 font-inter capitalize">{user.status}</p>
+                    <p className="text-sm text-gray-600 font-inter capitalize">
+                      {user.status}
+                    </p>
                   </div>
                 </div>
               </CardHeader>
@@ -517,10 +549,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                       variant="secondary"
                       className="bg-[#92278F]/10 text-[#92278F] hover:bg-[#92278F]/20 font-inter text-sm px-3 py-1 flex items-center space-x-2"
                     >
-                      <div className="text-[#92278F]">{getInfluenceIcon(user.user_influence_style)}</div>
+                      <div className="text-[#92278F]">
+                        {getInfluenceIcon(user.user_influence_style)}
+                      </div>
                       {/* Show name only for single styles */}
                       {!user.user_influence_style.includes("-") && (
-                        <span className="capitalize">{user.user_influence_style}</span>
+                        <span className="capitalize">
+                          {user.user_influence_style}
+                        </span>
                       )}
                     </Badge>
                   </div>
@@ -528,8 +564,8 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                   <Button
                     className="w-full bg-[#92278F] hover:bg-[#7a1f78] text-white font-inter group-hover:shadow-md transition-all"
                     onClick={(e) => {
-                      e.stopPropagation()
-                      handleUserClick(user)
+                      e.stopPropagation();
+                      handleUserClick(user);
                     }}
                   >
                     <MessageCircle className="w-4 h-4 mr-2" />
@@ -546,8 +582,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
             <div className="text-gray-400 mb-4">
               <Users className="w-16 h-16 mx-auto" />
             </div>
-            <h3 className="font-playfair text-xl text-gray-600 mb-2">No users found</h3>
-            <p className="font-inter text-gray-500">Try adjusting your search terms</p>
+            <h3 className="font-playfair text-xl text-gray-600 mb-2">
+              No users found
+            </h3>
+            <p className="font-inter text-gray-500">
+              Try adjusting your search terms
+            </p>
           </div>
         )}
       </div>
@@ -558,7 +598,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
           <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="font-playfair text-2xl font-bold text-gray-800">OpenAI Settings</h2>
+                <h2 className="font-playfair text-2xl font-bold text-gray-800">
+                  OpenAI Settings
+                </h2>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -572,7 +614,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
               <div className="space-y-6">
                 {/* System Instruction */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-inter">System Instruction</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-inter">
+                    System Instruction
+                  </label>
                   <Textarea
                     value={systemInstruction}
                     onChange={(e) => setSystemInstruction(e.target.value)}
@@ -580,21 +624,26 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                     className="min-h-[120px] font-inter"
                   />
                   <p className="text-xs text-gray-500 mt-1 font-inter">
-                    This instruction will be sent to OpenAI as the system message for all conversations.
+                    This instruction will be sent to OpenAI as the system
+                    message for all conversations.
                   </p>
                 </div>
 
                 {/* Fine-tuning Data */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-inter">Fine-tuning Data</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2 font-inter">
+                    Fine-tuning Data
+                  </label>
 
                   {/* Data Type Dropdown */}
                   <div className="mb-3">
                     <select
                       value={fineTuningDataType}
                       onChange={(e) => {
-                        setFineTuningDataType(e.target.value as "message" | "text" | "json")
-                        setFineTuningData("") // Clear existing data when switching types
+                        setFineTuningDataType(
+                          e.target.value as "message" | "text" | "json"
+                        );
+                        setFineTuningData(""); // Clear existing data when switching types
                       }}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#92278F] focus:border-[#92278F] font-inter text-sm"
                     >
@@ -625,7 +674,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                       disabled={!fineTuningData.trim() || ingestLoading}
                       className="bg-blue-600 hover:bg-blue-700 text-white font-inter flex items-center space-x-2"
                     >
-                      {ingestLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                      {ingestLoading ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <Upload className="w-4 h-4" />
+                      )}
                       <span>{ingestLoading ? "Ingesting..." : "Ingest"}</span>
                     </Button>
                   </div>
@@ -634,7 +687,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
 
               {/* Action Buttons */}
               <div className="flex justify-end space-x-3 mt-6 pt-6 border-t border-gray-200">
-                <Button variant="outline" onClick={() => setShowSettings(false)} className="font-inter">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowSettings(false)}
+                  className="font-inter"
+                >
                   Cancel
                 </Button>
                 <Button
@@ -642,7 +699,11 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                   disabled={settingsLoading}
                   className="bg-[#92278F] hover:bg-[#7a1f78] text-white font-inter flex items-center space-x-2"
                 >
-                  {settingsLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  {settingsLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Save className="w-4 h-4" />
+                  )}
                   <span>{settingsLoading ? "Saving..." : "Save Settings"}</span>
                 </Button>
               </div>
@@ -656,7 +717,9 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
         <div className="fixed top-4 right-4 z-50">
           <div
             className={`px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${
-              toast.type === "success" ? "bg-green-500 text-white" : "bg-red-500 text-white"
+              toast.type === "success"
+                ? "bg-green-500 text-white"
+                : "bg-red-500 text-white"
             }`}
           >
             <span className="font-inter text-sm">{toast.message}</span>
@@ -672,5 +735,5 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
         </div>
       )}
     </div>
-  )
+  );
 }

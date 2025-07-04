@@ -1,70 +1,84 @@
-"use client"
+"use client";
 
-import React from "react"
+import React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ArrowLeft, Eye, EyeOff, UserPlus, Mail, Lock, User } from "lucide-react"
-import { createClient } from "@/lib/supabase/client"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ArrowLeft,
+  Eye,
+  EyeOff,
+  UserPlus,
+  Mail,
+  Lock,
+  User,
+} from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 export default function SignUp() {
-  const [firstName, setFirstName] = useState("")
-  const [lastName, setLastName] = useState("")
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [confirmPassword, setConfirmPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState(false)
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
 
   // Add this test function to verify Supabase connection
   const testSupabaseConnection = async () => {
     try {
-      const supabase = createClient()
-      const { data, error } = await supabase.from("profiles").select("count", { count: "exact" })
-      console.log("Supabase connection test:", { data, error })
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("count", { count: "exact" });
+      console.log("Supabase connection test:", { data, error });
     } catch (err) {
-      console.error("Supabase connection failed:", err)
+      console.error("Supabase connection failed:", err);
     }
-  }
+  };
 
   // Call this when component mounts
   React.useEffect(() => {
-    testSupabaseConnection()
-  }, [])
+    testSupabaseConnection();
+  }, []);
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setLoading(true)
-    setError(null)
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match")
-      setLoading(false)
-      return
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
     }
 
     if (password.length < 6) {
-      setError("Password must be at least 6 characters long")
-      setLoading(false)
-      return
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
     }
 
     if (!firstName.trim() || !lastName.trim()) {
-      setError("First name and last name are required")
-      setLoading(false)
-      return
+      setError("First name and last name are required");
+      setLoading(false);
+      return;
     }
 
     try {
-      const supabase = createClient()
+      const supabase = createClient();
 
       // Add debugging
-      console.log("Attempting to sign up with:", { email, firstName, lastName })
+      console.log("Attempting to sign up with:", {
+        email,
+        firstName,
+        lastName,
+      });
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -76,43 +90,43 @@ export default function SignUp() {
             full_name: `${firstName.trim()} ${lastName.trim()}`, // Keep for compatibility
           },
         },
-      })
+      });
 
       // Add more detailed logging
-      console.log("Signup response:", { data, error })
+      console.log("Signup response:", { data, error });
 
       if (error) {
-        console.error("Signup error:", error)
-        setError(error.message)
+        console.error("Signup error:", error);
+        setError(error.message);
       } else {
-        console.log("Signup successful:", data)
-        setSuccess(true)
+        console.log("Signup successful:", data);
+        setSuccess(true);
       }
     } catch (err) {
-      console.error("Unexpected error:", err)
-      setError("An unexpected error occurred")
+      console.error("Unexpected error:", err);
+      setError("An unexpected error occurred");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleGoogleSignUp = async () => {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {
           redirectTo: `${window.location.origin}/auth/callback`,
         },
-      })
+      });
 
       if (error) {
-        setError(error.message)
+        setError(error.message);
       }
     } catch (err) {
-      setError("An unexpected error occurred")
+      setError("An unexpected error occurred");
     }
-  }
+  };
 
   if (success) {
     return (
@@ -123,19 +137,25 @@ export default function SignUp() {
               <div className="w-16 h-16 bg-green-500 rounded-full flex items-center justify-center mx-auto mb-4">
                 <UserPlus className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                Check your email!
+              </h2>
               <p className="text-gray-600 mb-6">
-                We've sent you a confirmation link at <strong>{email}</strong>. Please check your email and click the
-                link to activate your account.
+                We've sent you a confirmation link at <strong>{email}</strong>.
+                Please check your email and click the link to activate your
+                account.
               </p>
-              <Button onClick={() => (window.location.href = "/")} className="bg-[#92278F] hover:bg-[#7a1f78]">
+              <Button
+                onClick={() => (window.location.href = "/")}
+                className="bg-[#92278F] hover:bg-[#7a1f78]"
+              >
                 Back to Home
               </Button>
             </CardContent>
           </Card>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -151,15 +171,25 @@ export default function SignUp() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          <img src="/logo.png" alt="Logo" className="w-16 h-16 rounded-full mx-auto mb-4" />
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">Create your account</h2>
-          <p className="mt-2 text-gray-600">Join The Influence Engine™ and start your journey</p>
+          <img
+            src="/logo.png"
+            alt="Logo"
+            className="w-16 h-16 rounded-full mx-auto mb-4"
+          />
+          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+            Create your account
+          </h2>
+          <p className="mt-2 text-gray-600">
+            Join The Influence Engine™ and start your journey
+          </p>
         </div>
 
         {/* Sign Up Form */}
         <Card className="border-2 border-gray-200">
           <CardHeader>
-            <CardTitle className="text-center text-xl font-semibold text-gray-900">Sign Up</CardTitle>
+            <CardTitle className="text-center text-xl font-semibold text-gray-900">
+              Sign Up
+            </CardTitle>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSignUp} className="space-y-6">
@@ -172,7 +202,10 @@ export default function SignUp() {
               {/* First Name and Last Name Row */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="firstName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     First name
                   </label>
                   <div className="relative">
@@ -190,7 +223,10 @@ export default function SignUp() {
                 </div>
 
                 <div>
-                  <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label
+                    htmlFor="lastName"
+                    className="block text-sm font-medium text-gray-700 mb-2"
+                  >
                     Last name
                   </label>
                   <div className="relative">
@@ -209,7 +245,10 @@ export default function SignUp() {
               </div>
 
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="email"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Email address
                 </label>
                 <div className="relative">
@@ -227,7 +266,10 @@ export default function SignUp() {
               </div>
 
               <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Password
                 </label>
                 <div className="relative">
@@ -246,13 +288,20 @@ export default function SignUp() {
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-2">
+                <label
+                  htmlFor="confirmPassword"
+                  className="block text-sm font-medium text-gray-700 mb-2"
+                >
                   Confirm password
                 </label>
                 <div className="relative">
@@ -271,7 +320,11 @@ export default function SignUp() {
                     onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    {showConfirmPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -284,13 +337,22 @@ export default function SignUp() {
                   className="h-4 w-4 text-[#92278F] focus:ring-[#92278F] border-gray-300 rounded"
                   required
                 />
-                <label htmlFor="terms" className="ml-2 block text-sm text-gray-700">
+                <label
+                  htmlFor="terms"
+                  className="ml-2 block text-sm text-gray-700"
+                >
                   I agree to the{" "}
-                  <a href="#" className="text-[#92278F] hover:text-[#7a1f78] font-medium">
+                  <a
+                    href="#"
+                    className="text-[#92278F] hover:text-[#7a1f78] font-medium"
+                  >
                     Terms of Service
                   </a>{" "}
                   and{" "}
-                  <a href="#" className="text-[#92278F] hover:text-[#7a1f78] font-medium">
+                  <a
+                    href="#"
+                    className="text-[#92278F] hover:text-[#7a1f78] font-medium"
+                  >
                     Privacy Policy
                   </a>
                 </label>
@@ -321,7 +383,9 @@ export default function SignUp() {
                   <div className="w-full border-t border-gray-300" />
                 </div>
                 <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-white text-gray-500">Or continue with</span>
+                  <span className="px-2 bg-white text-gray-500">
+                    Or continue with
+                  </span>
                 </div>
               </div>
 
@@ -355,7 +419,10 @@ export default function SignUp() {
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <a href="/auth/signin" className="text-[#92278F] hover:text-[#7a1f78] font-medium">
+                <a
+                  href="/auth/signin"
+                  className="text-[#92278F] hover:text-[#7a1f78] font-medium"
+                >
                   Sign in
                 </a>
               </p>
@@ -364,5 +431,5 @@ export default function SignUp() {
         </Card>
       </div>
     </div>
-  )
+  );
 }

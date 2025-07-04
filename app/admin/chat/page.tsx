@@ -1,56 +1,68 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Send, Bot, ArrowLeft, Zap, Users, Anchor, Link, Navigation, User, Settings, Plus } from "lucide-react"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Send,
+  Bot,
+  ArrowLeft,
+  Zap,
+  Users,
+  Anchor,
+  Link,
+  Navigation,
+  User,
+  Settings,
+  Plus,
+} from "lucide-react";
 
 interface ChatUser {
-  id: string
-  name: string
-  influenceStyle: string // Changed from union to string for blended styles
-  avatar: string
-  status: "online" | "offline" | "away"
-  color: string
+  id: string;
+  name: string;
+  influenceStyle: string; // Changed from union to string for blended styles
+  avatar: string;
+  status: "online" | "offline" | "away";
+  color: string;
 }
 
 interface Message {
-  id: string
-  content: string
-  sender: "admin" | "user" | "assistant"
-  timestamp: Date
-  displayName?: string
+  id: string;
+  content: string;
+  sender: "admin" | "user" | "assistant";
+  timestamp: Date;
+  displayName?: string;
 }
 
 interface ChatHistory {
-  id: string
-  userName: string
-  userAvatar: string
-  userColor: string
-  lastMessage: string
-  timestamp: Date
+  id: string;
+  userName: string;
+  userAvatar: string;
+  userColor: string;
+  lastMessage: string;
+  timestamp: Date;
 }
 
 const getInfluenceIcon = (style: string) => {
-  const styles = style.split("-")
+  const styles = style.split("-");
 
   const getIcon = (singleStyle: string) => {
     switch (singleStyle) {
       case "catalyst":
-        return <Zap className="w-4 h-4" />
+        return <Zap className="w-4 h-4" />;
       case "diplomat":
-        return <Users className="w-4 h-4" />
+        return <Users className="w-4 h-4" />;
       case "anchor":
-        return <Anchor className="w-4 h-4" />
+        return <Anchor className="w-4 h-4" />;
       case "connector":
-        return <Link className="w-4 h-4" />
+        return <Link className="w-4 h-4" />;
       case "navigator":
-        return <Navigation className="w-4 h-4" />
+        return <Navigation className="w-4 h-4" />;
       default:
-        return <Bot className="w-4 h-4" />
+        return <Bot className="w-4 h-4" />;
     }
-  }
+  };
 
   // For blended styles, show both icons with plus
   if (styles.length === 2) {
@@ -60,27 +72,27 @@ const getInfluenceIcon = (style: string) => {
         <span className="text-xs">+</span>
         {getIcon(styles[1])}
       </div>
-    )
+    );
   }
 
   // For single styles, show just the icon
-  return getIcon(styles[0])
-}
+  return getIcon(styles[0]);
+};
 
 export default function AdminChatInterface() {
-  const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null)
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [currentSender, setCurrentSender] = useState<"admin" | "user">("user")
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
-  const [globalSystemInstruction, setGlobalSystemInstruction] = useState("")
+  const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [currentSender, setCurrentSender] = useState<"admin" | "user">("user");
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [globalSystemInstruction, setGlobalSystemInstruction] = useState("");
 
   useEffect(() => {
     // Get user data from localStorage
-    const userData = localStorage.getItem("selectedUser")
+    const userData = localStorage.getItem("selectedUser");
     if (userData) {
-      const user = JSON.parse(userData)
-      setSelectedUser(user)
+      const user = JSON.parse(userData);
+      setSelectedUser(user);
 
       // Set initial welcome message from AI Assistant
       const initialMessages: Message[] = [
@@ -90,21 +102,23 @@ export default function AdminChatInterface() {
           sender: "assistant",
           timestamp: new Date(Date.now() - 60000),
         },
-      ]
-      setMessages(initialMessages)
+      ];
+      setMessages(initialMessages);
 
       // Load or create chat history for the selected user only
-      loadChatHistory(user)
+      loadChatHistory(user);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     // Load global OpenAI settings
-    const savedSystemInstruction = localStorage.getItem("openai_system_instruction")
+    const savedSystemInstruction = localStorage.getItem(
+      "openai_system_instruction"
+    );
     if (savedSystemInstruction) {
-      setGlobalSystemInstruction(savedSystemInstruction)
+      setGlobalSystemInstruction(savedSystemInstruction);
     }
-  }, [])
+  }, []);
 
   const loadChatHistory = (currentUser: ChatUser) => {
     // Only show the current user's chat history
@@ -117,13 +131,13 @@ export default function AdminChatInterface() {
         lastMessage: "Hello Admin! I'm monitoring the conversation...",
         timestamp: new Date(),
       },
-    ]
-    setChatHistory(userHistory)
-  }
+    ];
+    setChatHistory(userHistory);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim() || !selectedUser) return
+    e.preventDefault();
+    if (!input.trim() || !selectedUser) return;
 
     // Add user message to chat
     const userMessage: Message = {
@@ -132,15 +146,19 @@ export default function AdminChatInterface() {
       sender: currentSender,
       timestamp: new Date(),
       displayName: currentSender === "user" ? selectedUser.name : "Admin",
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
 
     // Update chat history
     setChatHistory((prev) =>
-      prev.map((chat) => (chat.id === selectedUser.id ? { ...chat, lastMessage: input, timestamp: new Date() } : chat)),
-    )
+      prev.map((chat) =>
+        chat.id === selectedUser.id
+          ? { ...chat, lastMessage: input, timestamp: new Date() }
+          : chat
+      )
+    );
 
     // TODO: Here you will add the OpenAI API call
     // The message should be sent to OpenAI with:
@@ -157,57 +175,63 @@ export default function AdminChatInterface() {
         content: `[AI Response Placeholder] - Received ${currentSender} message: "${input}". This will be replaced with actual OpenAI response.`,
         sender: "assistant",
         timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, aiResponse])
+      };
+      setMessages((prev) => [...prev, aiResponse]);
 
       // Update chat history with AI response
       setChatHistory((prev) =>
         prev.map((chat) =>
           chat.id === selectedUser.id
-            ? { ...chat, lastMessage: "AI responded to your message", timestamp: new Date() }
-            : chat,
-        ),
-      )
-    }, 1000)
-  }
+            ? {
+                ...chat,
+                lastMessage: "AI responded to your message",
+                timestamp: new Date(),
+              }
+            : chat
+        )
+      );
+    }, 1000);
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    })
-  }
+    });
+  };
 
   const formatHistoryTime = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(hours / 24)
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
 
-    if (hours < 1) return "now"
-    if (hours < 24) return `${hours}h`
-    if (days < 7) return `${days}d`
-    return date.toLocaleDateString()
-  }
+    if (hours < 1) return "now";
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    return date.toLocaleDateString();
+  };
 
   const handleBackToDashboard = () => {
-    localStorage.removeItem("selectedUser")
-    window.location.href = "/admin"
-  }
+    localStorage.removeItem("selectedUser");
+    window.location.href = "/admin";
+  };
 
   const getMessageColor = (sender: string) => {
     switch (sender) {
       case "admin":
-        return "bg-[#92278F] text-white"
+        return "bg-[#92278F] text-white";
       case "user":
-        return selectedUser ? `${selectedUser.color.replace("bg-", "bg-")} text-white` : "bg-blue-500 text-white"
+        return selectedUser
+          ? `${selectedUser.color.replace("bg-", "bg-")} text-white`
+          : "bg-blue-500 text-white";
       case "assistant":
-        return "bg-gray-100 text-black border border-gray-200"
+        return "bg-gray-100 text-black border border-gray-200";
       default:
-        return "bg-gray-100 text-black"
+        return "bg-gray-100 text-black";
     }
-  }
+  };
 
   const getAvatarForSender = (sender: string) => {
     switch (sender) {
@@ -216,7 +240,7 @@ export default function AdminChatInterface() {
           <div className="w-8 h-8 rounded-full bg-[#92278F] flex items-center justify-center flex-shrink-0">
             <Settings className="w-4 h-4 text-white" />
           </div>
-        )
+        );
       case "user":
         return selectedUser ? (
           <div
@@ -228,33 +252,40 @@ export default function AdminChatInterface() {
           <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4 text-white" />
           </div>
-        )
+        );
       case "assistant":
         return (
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
-            <img src="/logo.png" alt="AI Assistant" className="w-6 h-6 rounded-full" />
+            <img
+              src="/logo.png"
+              alt="AI Assistant"
+              className="w-6 h-6 rounded-full"
+            />
           </div>
-        )
+        );
       default:
         return (
           <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
             <Bot className="w-4 h-4 text-white" />
           </div>
-        )
+        );
     }
-  }
+  };
 
   if (!selectedUser) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <p className="font-inter text-gray-600 mb-4">Loading admin chat...</p>
-          <Button onClick={handleBackToDashboard} className="bg-[#92278F] hover:bg-[#7a1f78] text-white">
+          <Button
+            onClick={handleBackToDashboard}
+            className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
+          >
             Back to Admin Dashboard
           </Button>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -273,17 +304,26 @@ export default function AdminChatInterface() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Admin Dashboard
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-[#92278F] p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-[#92278F] p-2"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <h2 className="font-playfair text-lg font-bold text-gray-800">Monitoring</h2>
+          <h2 className="font-playfair text-lg font-bold text-gray-800">
+            Monitoring
+          </h2>
         </div>
 
         {/* Chat History List - Only showing the current user */}
         <div className="flex-1 overflow-y-auto">
           {chatHistory.map((chat) => (
-            <div key={chat.id} className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]">
+            <div
+              key={chat.id}
+              className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]"
+            >
               <div className="flex items-center space-x-3">
                 <div
                   className={`w-10 h-10 rounded-full ${chat.userColor} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
@@ -292,10 +332,16 @@ export default function AdminChatInterface() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">{chat.userName}</h3>
-                    <span className="text-xs text-gray-500 flex-shrink-0">{formatHistoryTime(chat.timestamp)}</span>
+                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">
+                      {chat.userName}
+                    </h3>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
+                      {formatHistoryTime(chat.timestamp)}
+                    </span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate mt-1">{chat.lastMessage}</p>
+                  <p className="text-sm text-gray-600 truncate mt-1">
+                    {chat.lastMessage}
+                  </p>
                 </div>
               </div>
             </div>
@@ -317,24 +363,32 @@ export default function AdminChatInterface() {
                   selectedUser.status === "online"
                     ? "bg-green-500"
                     : selectedUser.status === "away"
-                      ? "bg-yellow-500"
-                      : "bg-gray-400"
+                    ? "bg-yellow-500"
+                    : "bg-gray-400"
                 }`}
               />
             </div>
             <div>
-              <h1 className="font-playfair text-2xl font-bold">Admin Monitoring: {selectedUser.name}</h1>
+              <h1 className="font-playfair text-2xl font-bold">
+                Admin Monitoring: {selectedUser.name}
+              </h1>
               <div className="flex items-center space-x-2 mt-1">
-                <div className="text-white/80">{getInfluenceIcon(selectedUser.influenceStyle)}</div>
+                <div className="text-white/80">
+                  {getInfluenceIcon(selectedUser.influenceStyle)}
+                </div>
                 {/* Show name only for single styles */}
                 {!selectedUser.influenceStyle.includes("-") && (
-                  <span className="font-inter text-sm text-white/90 capitalize">{selectedUser.influenceStyle}</span>
+                  <span className="font-inter text-sm text-white/90 capitalize">
+                    {selectedUser.influenceStyle}
+                  </span>
                 )}
               </div>
               {globalSystemInstruction && (
                 <div className="flex items-center space-x-1 mt-1">
                   <Settings className="w-3 h-3 text-white/60" />
-                  <span className="font-inter text-xs text-white/80">Custom system instruction active</span>
+                  <span className="font-inter text-xs text-white/80">
+                    Custom system instruction active
+                  </span>
                 </div>
               )}
             </div>
@@ -347,39 +401,55 @@ export default function AdminChatInterface() {
             <div
               key={message.id}
               className={`flex space-x-3 animate-in slide-in-from-bottom-2 duration-300 ${
-                message.sender === "assistant" ? "items-start" : "items-start justify-end"
+                message.sender === "assistant"
+                  ? "items-start"
+                  : "items-start justify-end"
               }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Avatar - show first for AI, last for Admin/User */}
-              {message.sender === "assistant" && getAvatarForSender(message.sender)}
+              {message.sender === "assistant" &&
+                getAvatarForSender(message.sender)}
 
               <div
-                className={`flex flex-col ${message.sender === "assistant" ? "items-start" : "items-end"} max-w-[70%]`}
+                className={`flex flex-col ${
+                  message.sender === "assistant" ? "items-start" : "items-end"
+                } max-w-[70%]`}
               >
                 {/* Message bubble */}
                 <div
-                  className={`px-4 py-3 rounded-2xl ${getMessageColor(message.sender)} shadow-sm ${
-                    message.sender === "assistant" ? "rounded-bl-md" : "rounded-br-md"
+                  className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                    message.sender
+                  )} shadow-sm ${
+                    message.sender === "assistant"
+                      ? "rounded-bl-md"
+                      : "rounded-br-md"
                   }`}
                 >
-                  <p className="font-inter text-sm leading-relaxed">{message.content}</p>
+                  <p className="font-inter text-sm leading-relaxed">
+                    {message.content}
+                  </p>
                 </div>
 
                 {/* Timestamp and sender info */}
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500 font-inter">{formatTime(message.timestamp)}</span>
+                  <span className="text-xs text-gray-500 font-inter">
+                    {formatTime(message.timestamp)}
+                  </span>
                   {message.displayName && (
                     <>
                       <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs text-gray-500 font-inter">{message.displayName}</span>
+                      <span className="text-xs text-gray-500 font-inter">
+                        {message.displayName}
+                      </span>
                     </>
                   )}
                 </div>
               </div>
 
               {/* Avatar - show last for Admin/User */}
-              {message.sender !== "assistant" && getAvatarForSender(message.sender)}
+              {message.sender !== "assistant" &&
+                getAvatarForSender(message.sender)}
             </div>
           ))}
         </div>
@@ -408,8 +478,14 @@ export default function AdminChatInterface() {
                 onClick={() => setCurrentSender("user")}
                 className={`font-inter text-sm flex items-center space-x-2 ${
                   currentSender === "user"
-                    ? `${selectedUser.color.replace("bg-", "bg-")} hover:opacity-80 text-white`
-                    : `border-gray-400 text-gray-600 hover:${selectedUser.color.replace("bg-", "bg-")} hover:text-white`
+                    ? `${selectedUser.color.replace(
+                        "bg-",
+                        "bg-"
+                      )} hover:opacity-80 text-white`
+                    : `border-gray-400 text-gray-600 hover:${selectedUser.color.replace(
+                        "bg-",
+                        "bg-"
+                      )} hover:text-white`
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -423,7 +499,9 @@ export default function AdminChatInterface() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={
-                  currentSender === "admin" ? "Enter admin feedback..." : `Message as ${selectedUser.name}...`
+                  currentSender === "admin"
+                    ? "Enter admin feedback..."
+                    : `Message as ${selectedUser.name}...`
                 }
                 className="flex-1 font-inter border-gray-300 focus:border-[#92278F] focus:ring-[#92278F] h-12"
               />
@@ -446,5 +524,5 @@ export default function AdminChatInterface() {
         </div>
       </div>
     </div>
-  )
+  );
 }

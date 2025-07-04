@@ -1,9 +1,9 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState, useEffect } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import type React from "react";
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Send,
   Bot,
@@ -19,62 +19,62 @@ import {
   CreditCard,
   LogOut,
   SettingsIcon,
-} from "lucide-react"
+} from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { createClient } from "@/lib/supabase/client"
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { createClient } from "@/lib/supabase/client";
 
 interface ChatUser {
-  id: string
-  name: string
-  influenceStyle: string // Changed to string for blended styles
-  avatar: string
-  status: "online" | "offline" | "away"
-  color: string
+  id: string;
+  name: string;
+  influenceStyle: string; // Changed to string for blended styles
+  avatar: string;
+  status: "online" | "offline" | "away";
+  color: string;
 }
 
 interface Message {
-  id: string
-  content: string
-  sender: "user" | "assistant"
-  timestamp: Date
-  displayName?: string
+  id: string;
+  content: string;
+  sender: "user" | "assistant";
+  timestamp: Date;
+  displayName?: string;
 }
 
 interface ChatHistory {
-  id: string
-  userName: string
-  userAvatar: string
-  userColor: string
-  lastMessage: string
-  timestamp: Date
+  id: string;
+  userName: string;
+  userAvatar: string;
+  userColor: string;
+  lastMessage: string;
+  timestamp: Date;
 }
 
 const getInfluenceIcon = (style: string) => {
-  const styles = style.split("-")
+  const styles = style.split("-");
 
   const getIcon = (singleStyle: string) => {
     switch (singleStyle) {
       case "catalyst":
-        return <Zap className="w-4 h-4" />
+        return <Zap className="w-4 h-4" />;
       case "diplomat":
-        return <Users className="w-4 h-4" />
+        return <Users className="w-4 h-4" />;
       case "anchor":
-        return <Anchor className="w-4 h-4" />
+        return <Anchor className="w-4 h-4" />;
       case "connector":
-        return <Link className="w-4 h-4" />
+        return <Link className="w-4 h-4" />;
       case "navigator":
-        return <Navigation className="w-4 h-4" />
+        return <Navigation className="w-4 h-4" />;
       default:
-        return <Bot className="w-4 h-4" />
+        return <Bot className="w-4 h-4" />;
     }
-  }
+  };
 
   // For blended styles, show both icons with plus
   if (styles.length === 2) {
@@ -84,12 +84,12 @@ const getInfluenceIcon = (style: string) => {
         <span className="text-xs">+</span>
         {getIcon(styles[1])}
       </div>
-    )
+    );
   }
 
   // For single styles, show just the icon
-  return getIcon(styles[0])
-}
+  return getIcon(styles[0]);
+};
 
 export default function ChatInterface() {
   const [currentUser] = useState<ChatUser>({
@@ -99,12 +99,12 @@ export default function ChatInterface() {
     avatar: "YU",
     status: "online",
     color: "bg-[#92278F]",
-  })
-  const [messages, setMessages] = useState<Message[]>([])
-  const [input, setInput] = useState("")
-  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([])
-  const [globalSystemInstruction, setGlobalSystemInstruction] = useState("")
-  const [user, setUser] = useState<any>(null)
+  });
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [input, setInput] = useState("");
+  const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
+  const [globalSystemInstruction, setGlobalSystemInstruction] = useState("");
+  const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
     // Set initial welcome message from AI Assistant
@@ -115,31 +115,33 @@ export default function ChatInterface() {
         sender: "assistant",
         timestamp: new Date(Date.now() - 60000),
       },
-    ]
-    setMessages(initialMessages)
+    ];
+    setMessages(initialMessages);
 
     // Load or create chat history
-    loadChatHistory()
-  }, [])
+    loadChatHistory();
+  }, []);
 
   useEffect(() => {
     // Load global OpenAI settings
-    const savedSystemInstruction = localStorage.getItem("openai_system_instruction")
+    const savedSystemInstruction = localStorage.getItem(
+      "openai_system_instruction"
+    );
     if (savedSystemInstruction) {
-      setGlobalSystemInstruction(savedSystemInstruction)
+      setGlobalSystemInstruction(savedSystemInstruction);
     }
-  }, [])
+  }, []);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient()
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser()
-      setUser(user)
-    }
-    fetchUser()
-  }, [])
+      } = await supabase.auth.getUser();
+      setUser(user);
+    };
+    fetchUser();
+  }, []);
 
   const loadChatHistory = () => {
     // Create sample chat history
@@ -152,13 +154,13 @@ export default function ChatInterface() {
         lastMessage: "Hello! I'm your AI assistant...",
         timestamp: new Date(),
       },
-    ]
-    setChatHistory(userHistory)
-  }
+    ];
+    setChatHistory(userHistory);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!input.trim()) return
+    e.preventDefault();
+    if (!input.trim()) return;
 
     // Add user message to chat
     const userMessage: Message = {
@@ -167,15 +169,19 @@ export default function ChatInterface() {
       sender: "user",
       timestamp: new Date(),
       displayName: currentUser.name,
-    }
+    };
 
-    setMessages((prev) => [...prev, userMessage])
-    setInput("")
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
 
     // Update chat history
     setChatHistory((prev) =>
-      prev.map((chat) => (chat.id === "chat-1" ? { ...chat, lastMessage: input, timestamp: new Date() } : chat)),
-    )
+      prev.map((chat) =>
+        chat.id === "chat-1"
+          ? { ...chat, lastMessage: input, timestamp: new Date() }
+          : chat
+      )
+    );
 
     // TODO: Here you will add the OpenAI API call
     // The message should be sent to OpenAI with:
@@ -192,52 +198,58 @@ export default function ChatInterface() {
         content: `Thank you for your message: "${input}". This is a placeholder response that will be replaced with actual OpenAI integration. I'm here to help with any questions or conversations you'd like to have!`,
         sender: "assistant",
         timestamp: new Date(),
-      }
-      setMessages((prev) => [...prev, aiResponse])
+      };
+      setMessages((prev) => [...prev, aiResponse]);
 
       // Update chat history with AI response
       setChatHistory((prev) =>
         prev.map((chat) =>
-          chat.id === "chat-1" ? { ...chat, lastMessage: "AI responded to your message", timestamp: new Date() } : chat,
-        ),
-      )
-    }, 1000)
-  }
+          chat.id === "chat-1"
+            ? {
+                ...chat,
+                lastMessage: "AI responded to your message",
+                timestamp: new Date(),
+              }
+            : chat
+        )
+      );
+    }, 1000);
+  };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-US", {
       hour: "2-digit",
       minute: "2-digit",
       hour12: true,
-    })
-  }
+    });
+  };
 
   const formatHistoryTime = (date: Date) => {
-    const now = new Date()
-    const diff = now.getTime() - date.getTime()
-    const hours = Math.floor(diff / (1000 * 60 * 60))
-    const days = Math.floor(hours / 24)
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(hours / 24);
 
-    if (hours < 1) return "now"
-    if (hours < 24) return `${hours}h`
-    if (days < 7) return `${days}d`
-    return date.toLocaleDateString()
-  }
+    if (hours < 1) return "now";
+    if (hours < 24) return `${hours}h`;
+    if (days < 7) return `${days}d`;
+    return date.toLocaleDateString();
+  };
 
   const handleBackToHome = () => {
-    window.location.href = "/"
-  }
+    window.location.href = "/";
+  };
 
   const getMessageColor = (sender: string) => {
     switch (sender) {
       case "user":
-        return "bg-[#92278F] text-white"
+        return "bg-[#92278F] text-white";
       case "assistant":
-        return "bg-gray-100 text-black border border-gray-200"
+        return "bg-gray-100 text-black border border-gray-200";
       default:
-        return "bg-gray-100 text-black"
+        return "bg-gray-100 text-black";
     }
-  }
+  };
 
   const getAvatarForSender = (sender: string) => {
     switch (sender) {
@@ -246,38 +258,42 @@ export default function ChatInterface() {
           <div className="w-8 h-8 rounded-full bg-[#92278F] flex items-center justify-center flex-shrink-0">
             <User className="w-4 h-4 text-white" />
           </div>
-        )
+        );
       case "assistant":
         return (
           <div className="w-8 h-8 rounded-full bg-white flex items-center justify-center flex-shrink-0 border-2 border-gray-200">
-            <img src="/logo.png" alt="AI Assistant" className="w-6 h-6 rounded-full" />
+            <img
+              src="/logo.png"
+              alt="AI Assistant"
+              className="w-6 h-6 rounded-full"
+            />
           </div>
-        )
+        );
       default:
         return (
           <div className="w-8 h-8 rounded-full bg-gray-400 flex items-center justify-center flex-shrink-0">
             <Bot className="w-4 h-4 text-white" />
           </div>
-        )
+        );
     }
-  }
+  };
 
   const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.href = "/"
-  }
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    window.location.href = "/";
+  };
 
   const getUserInitials = (user: any) => {
     if (user?.user_metadata?.full_name) {
-      const names = user.user_metadata.full_name.split(" ")
-      return names.length > 1 ? `${names[0][0]}${names[1][0]}` : names[0][0]
+      const names = user.user_metadata.full_name.split(" ");
+      return names.length > 1 ? `${names[0][0]}${names[1][0]}` : names[0][0];
     }
     if (user?.email) {
-      return user.email[0].toUpperCase()
+      return user.email[0].toUpperCase();
     }
-    return "U"
-  }
+    return "U";
+  };
 
   return (
     <div className="min-h-screen bg-white flex">
@@ -295,17 +311,26 @@ export default function ChatInterface() {
               <ArrowLeft className="w-4 h-4 mr-2" />
               Home
             </Button>
-            <Button variant="ghost" size="sm" className="text-gray-600 hover:text-[#92278F] p-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-gray-600 hover:text-[#92278F] p-2"
+            >
               <Plus className="w-4 h-4" />
             </Button>
           </div>
-          <h2 className="font-playfair text-lg font-bold text-gray-800">Chat History</h2>
+          <h2 className="font-playfair text-lg font-bold text-gray-800">
+            Chat History
+          </h2>
         </div>
 
         {/* Chat History List */}
         <div className="flex-1 overflow-y-auto">
           {chatHistory.map((chat) => (
-            <div key={chat.id} className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]">
+            <div
+              key={chat.id}
+              className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]"
+            >
               <div className="flex items-center space-x-3">
                 <div
                   className={`w-10 h-10 rounded-full ${chat.userColor} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
@@ -314,10 +339,16 @@ export default function ChatInterface() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">{chat.userName}</h3>
-                    <span className="text-xs text-gray-500 flex-shrink-0">{formatHistoryTime(chat.timestamp)}</span>
+                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">
+                      {chat.userName}
+                    </h3>
+                    <span className="text-xs text-gray-500 flex-shrink-0">
+                      {formatHistoryTime(chat.timestamp)}
+                    </span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate mt-1">{chat.lastMessage}</p>
+                  <p className="text-sm text-gray-600 truncate mt-1">
+                    {chat.lastMessage}
+                  </p>
                 </div>
               </div>
             </div>
@@ -340,24 +371,32 @@ export default function ChatInterface() {
                     currentUser.status === "online"
                       ? "bg-green-500"
                       : currentUser.status === "away"
-                        ? "bg-yellow-500"
-                        : "bg-gray-400"
+                      ? "bg-yellow-500"
+                      : "bg-gray-400"
                   }`}
                 />
               </div>
               <div>
-                <h1 className="font-playfair text-2xl font-bold">AI Chat Assistant</h1>
+                <h1 className="font-playfair text-2xl font-bold">
+                  AI Chat Assistant
+                </h1>
                 <div className="flex items-center space-x-2 mt-1">
-                  <div className="text-white/80">{getInfluenceIcon(currentUser.influenceStyle)}</div>
+                  <div className="text-white/80">
+                    {getInfluenceIcon(currentUser.influenceStyle)}
+                  </div>
                   {/* Show name only for single styles */}
                   {!currentUser.influenceStyle.includes("-") && (
-                    <span className="font-inter text-sm text-white/90 capitalize">{currentUser.influenceStyle}</span>
+                    <span className="font-inter text-sm text-white/90 capitalize">
+                      {currentUser.influenceStyle}
+                    </span>
                   )}
                 </div>
                 {globalSystemInstruction && (
                   <div className="flex items-center space-x-1 mt-1">
                     <Settings className="w-3 h-3 text-white/60" />
-                    <span className="font-inter text-xs text-white/80">Custom system instruction active</span>
+                    <span className="font-inter text-xs text-white/80">
+                      Custom system instruction active
+                    </span>
                   </div>
                 )}
               </div>
@@ -372,7 +411,9 @@ export default function ChatInterface() {
                 >
                   <Avatar className="h-9 w-9">
                     <AvatarImage
-                      src={user?.user_metadata?.avatar_url || "/placeholder.svg"}
+                      src={
+                        user?.user_metadata?.avatar_url || "/placeholder.svg"
+                      }
                       alt={user?.user_metadata?.full_name || user?.email}
                     />
                     <AvatarFallback className="bg-white text-[#92278F] font-semibold">
@@ -384,16 +425,26 @@ export default function ChatInterface() {
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <div className="flex items-center justify-start gap-2 p-2">
                   <div className="flex flex-col space-y-1 leading-none">
-                    {user?.user_metadata?.full_name && <p className="font-medium">{user.user_metadata.full_name}</p>}
-                    <p className="w-[200px] truncate text-sm text-muted-foreground">{user?.email}</p>
+                    {user?.user_metadata?.full_name && (
+                      <p className="font-medium">
+                        {user.user_metadata.full_name}
+                      </p>
+                    )}
+                    <p className="w-[200px] truncate text-sm text-muted-foreground">
+                      {user?.email}
+                    </p>
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => (window.location.href = "/profile")}>
+                <DropdownMenuItem
+                  onClick={() => (window.location.href = "/profile")}
+                >
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => (window.location.href = "/subscription")}>
+                <DropdownMenuItem
+                  onClick={() => (window.location.href = "/subscription")}
+                >
                   <CreditCard className="mr-2 h-4 w-4" />
                   <span>Subscription</span>
                 </DropdownMenuItem>
@@ -413,39 +464,55 @@ export default function ChatInterface() {
             <div
               key={message.id}
               className={`flex space-x-3 animate-in slide-in-from-bottom-2 duration-300 ${
-                message.sender === "assistant" ? "items-start" : "items-start justify-end"
+                message.sender === "assistant"
+                  ? "items-start"
+                  : "items-start justify-end"
               }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Avatar - show first for AI, last for User */}
-              {message.sender === "assistant" && getAvatarForSender(message.sender)}
+              {message.sender === "assistant" &&
+                getAvatarForSender(message.sender)}
 
               <div
-                className={`flex flex-col ${message.sender === "assistant" ? "items-start" : "items-end"} max-w-[70%]`}
+                className={`flex flex-col ${
+                  message.sender === "assistant" ? "items-start" : "items-end"
+                } max-w-[70%]`}
               >
                 {/* Message bubble */}
                 <div
-                  className={`px-4 py-3 rounded-2xl ${getMessageColor(message.sender)} shadow-sm ${
-                    message.sender === "assistant" ? "rounded-bl-md" : "rounded-br-md"
+                  className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                    message.sender
+                  )} shadow-sm ${
+                    message.sender === "assistant"
+                      ? "rounded-bl-md"
+                      : "rounded-br-md"
                   }`}
                 >
-                  <p className="font-inter text-sm leading-relaxed">{message.content}</p>
+                  <p className="font-inter text-sm leading-relaxed">
+                    {message.content}
+                  </p>
                 </div>
 
                 {/* Timestamp and sender info */}
                 <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500 font-inter">{formatTime(message.timestamp)}</span>
+                  <span className="text-xs text-gray-500 font-inter">
+                    {formatTime(message.timestamp)}
+                  </span>
                   {message.displayName && (
                     <>
                       <span className="text-xs text-gray-400">•</span>
-                      <span className="text-xs text-gray-500 font-inter">{message.displayName}</span>
+                      <span className="text-xs text-gray-500 font-inter">
+                        {message.displayName}
+                      </span>
                     </>
                   )}
                 </div>
               </div>
 
               {/* Avatar - show last for User */}
-              {message.sender !== "assistant" && getAvatarForSender(message.sender)}
+              {message.sender !== "assistant" &&
+                getAvatarForSender(message.sender)}
             </div>
           ))}
         </div>
@@ -471,10 +538,12 @@ export default function ChatInterface() {
             </form>
 
             {/* Helper text */}
-            <p className="text-xs text-gray-500 font-inter text-center">Start a conversation with your AI assistant</p>
+            <p className="text-xs text-gray-500 font-inter text-center">
+              Start a conversation with your AI assistant
+            </p>
           </div>
         </div>
       </div>
     </div>
-  )
+  );
 }

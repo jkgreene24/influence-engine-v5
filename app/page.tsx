@@ -1,6 +1,6 @@
-"use client"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
+"use client";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   MessageCircle,
   Zap,
@@ -13,103 +13,18 @@ import {
   CheckCircle,
   Play,
   LogIn,
-} from "lucide-react"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-interface DashboardUser {
-  user_uuid: string
-  user_name: string
-  user_influence_style: string // Changed to string for blended styles
-  avatar: string
-  status: "online" | "offline" | "away"
-  color: string
-}
-
-interface Message {
-  id: string
-  content: string
-  sender: "user" | "assistant"
-  timestamp: Date
-}
-
-const getRandomBlendedInfluenceStyle = () => {
-  const styles = ["catalyst", "diplomat", "anchor", "connector", "navigator"]
-  const shuffled = [...styles].sort(() => 0.5 - Math.random())
-  return `${shuffled[0]}-${shuffled[1]}`
-}
-
-const getInfluenceIcon = (style: string) => {
-  const styles = style.split("-")
-
-  const getIcon = (singleStyle: string) => {
-    switch (singleStyle) {
-      case "catalyst":
-        return <Zap className="w-4 h-4" />
-      case "diplomat":
-        return <Users className="w-4 h-4" />
-      case "anchor":
-        return <Anchor className="w-4 h-4" />
-      case "connector":
-        return <Link className="w-4 h-4" />
-      case "navigator":
-        return <Navigation className="w-4 h-4" />
-      default:
-        return <MessageCircle className="w-4 h-4" />
-    }
-  }
-
-  // For blended styles, show both icons with plus
-  if (styles.length === 2) {
-    return (
-      <div className="flex items-center space-x-1">
-        {getIcon(styles[0])}
-        <span className="text-xs">+</span>
-        {getIcon(styles[1])}
-      </div>
-    )
-  }
-
-  // For single styles, show just the icon
-  return getIcon(styles[0])
-}
-
-const getRandomColor = (index: number) => {
-  const colors = [
-    "bg-purple-500",
-    "bg-blue-500",
-    "bg-green-500",
-    "bg-orange-500",
-    "bg-pink-500",
-    "bg-indigo-500",
-    "bg-teal-500",
-    "bg-red-500",
-    "bg-yellow-500",
-    "bg-cyan-500",
-  ]
-  return colors[index % colors.length]
-}
-
-const getRandomStatus = () => {
-  const statuses: ("online" | "offline" | "away")[] = ["online", "offline", "away"]
-  return statuses[Math.floor(Math.random() * statuses.length)]
-}
-
-const generateAvatar = (name: string) => {
-  const words = name.split(" ")
-  if (words.length >= 2) {
-    return (words[0][0] + words[1][0]).toUpperCase()
-  }
-  return name.substring(0, 2).toUpperCase()
-}
+} from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
-  const [isHovered, setIsHovered] = useState(false)
+  const [isHovered, setIsHovered] = useState(false);
 
   const features = [
     {
       icon: <Zap className="w-8 h-8" />,
       title: "Seller Conversations",
-      description: "Real-time phrasing for objections, negotiations, ghosting, or deals that feel tense.",
+      description:
+        "Real-time phrasing for objections, negotiations, ghosting, or deals that feel tense.",
     },
     {
       icon: <Users className="w-8 h-8" />,
@@ -129,15 +44,35 @@ export default function Dashboard() {
       description:
         "Not canned responses. Responds to emotional cues like hesitation, urgency, or overwhelm with personalized guidance.",
     },
-  ]
+  ];
 
   const influenceStyles = [
-    { icon: <Zap className="w-6 h-6" />, name: "Catalyst", color: "bg-orange-500" },
-    { icon: <Users className="w-6 h-6" />, name: "Diplomat", color: "bg-blue-500" },
-    { icon: <Anchor className="w-6 h-6" />, name: "Anchor", color: "bg-green-500" },
-    { icon: <Link className="w-6 h-6" />, name: "Connector", color: "bg-purple-500" },
-    { icon: <Navigation className="w-6 h-6" />, name: "Navigator", color: "bg-red-500" },
-  ]
+    {
+      icon: <Zap className="w-6 h-6" />,
+      name: "Catalyst",
+      color: "bg-orange-500",
+    },
+    {
+      icon: <Users className="w-6 h-6" />,
+      name: "Diplomat",
+      color: "bg-blue-500",
+    },
+    {
+      icon: <Anchor className="w-6 h-6" />,
+      name: "Anchor",
+      color: "bg-green-500",
+    },
+    {
+      icon: <Link className="w-6 h-6" />,
+      name: "Connector",
+      color: "bg-purple-500",
+    },
+    {
+      icon: <Navigation className="w-6 h-6" />,
+      name: "Navigator",
+      color: "bg-red-500",
+    },
+  ];
 
   const howItWorks = [
     {
@@ -155,7 +90,8 @@ export default function Dashboard() {
     {
       step: "3",
       title: "Rephrase or Refine",
-      description: "Get examples, questions to ask, or alternate phrasing that actually sounds like you.",
+      description:
+        "Get examples, questions to ask, or alternate phrasing that actually sounds like you.",
     },
     {
       step: "4",
@@ -163,7 +99,7 @@ export default function Dashboard() {
       description:
         "Every interaction makes the system smarter. With human-guided feedback, The Influence Engine™ continuously improves its coaching precision over time.",
     },
-  ]
+  ];
 
   const differentiators = [
     "Built on coaching logic, not canned responses",
@@ -171,7 +107,7 @@ export default function Dashboard() {
     "Adapts phrasing to your unique Influence Style—from Anchor to Catalyst",
     "Evolves through live feedback—not static scripts",
     "Works across industries, starting with real estate",
-  ]
+  ];
 
   return (
     <div className="min-h-screen bg-white">
@@ -180,8 +116,14 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-full" />
-              <span className="text-2xl font-bold text-gray-900 tracking-tight">The Influence Engine™</span>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-10 h-10 rounded-full"
+              />
+              <span className="text-2xl font-bold text-gray-900 tracking-tight">
+                The Influence Engine™
+              </span>
             </div>
             <div className="flex items-center space-x-8">
               <a
@@ -190,7 +132,10 @@ export default function Dashboard() {
               >
                 About
               </a>
-              <a href="#quiz" className="text-gray-700 hover:text-[#92278F] transition-colors duration-200 font-medium">
+              <a
+                href="#quiz"
+                className="text-gray-700 hover:text-[#92278F] transition-colors duration-200 font-medium"
+              >
                 Quiz
               </a>
               <a
@@ -221,15 +166,18 @@ export default function Dashboard() {
       <section className="bg-gradient-to-r from-[#92278F] to-[#a83399] text-white">
         <div className="max-w-7xl mx-auto px-6 py-24">
           <div className="text-center">
-            <h1 className="text-6xl md:text-7xl font-bold mb-8 tracking-tight leading-none">The Influence Engine™</h1>
+            <h1 className="text-6xl md:text-7xl font-bold mb-8 tracking-tight leading-none">
+              The Influence Engine™
+            </h1>
             <p className="text-2xl md:text-3xl text-white/95 mb-6 max-w-4xl mx-auto font-medium leading-tight">
               Coaching that adapts to your voice. In real time.
             </p>
             <p className="text-xl text-white/85 mb-12 max-w-4xl mx-auto leading-relaxed">
               Not a chatbot. Not a script.
               <br />
-              An intelligent coaching platform designed to sound like you, think with you, and guide you forward—based
-              on how you naturally influence.
+              An intelligent coaching platform designed to sound like you, think
+              with you, and guide you forward—based on how you naturally
+              influence.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center mb-8">
               <Button
@@ -240,7 +188,11 @@ export default function Dashboard() {
               >
                 <Play className="w-5 h-5" />
                 <span>Take the Style Quiz to Begin</span>
-                <ArrowRight className={`w-5 h-5 transition-transform ${isHovered ? "translate-x-1" : ""}`} />
+                <ArrowRight
+                  className={`w-5 h-5 transition-transform ${
+                    isHovered ? "translate-x-1" : ""
+                  }`}
+                />
               </Button>
               <Button
                 size="lg"
@@ -269,15 +221,19 @@ export default function Dashboard() {
             </h2>
             <div className="max-w-5xl mx-auto">
               <p className="text-xl text-gray-700 mb-8 leading-relaxed font-medium">
-                The Influence Engine™ is an adaptive AI-powered coaching system that helps you speak more clearly, lead
-                more effectively, and communicate with confidence—in your own voice, not someone else's.
+                The Influence Engine™ is an adaptive AI-powered coaching system
+                that helps you speak more clearly, lead more effectively, and
+                communicate with confidence—in your own voice, not someone
+                else's.
               </p>
               <p className="text-lg text-gray-600 mb-8 leading-relaxed">
-                It responds to your influence style, emotional tone, and real-world scenarios with phrasing, strategy,
-                and support calibrated to you.
+                It responds to your influence style, emotional tone, and
+                real-world scenarios with phrasing, strategy, and support
+                calibrated to you.
               </p>
               <p className="text-lg text-gray-700 font-semibold tracking-wide">
-                Built on GPT. Customized with coaching intelligence. Trained to evolve with every conversation.
+                Built on GPT. Customized with coaching intelligence. Trained to
+                evolve with every conversation.
               </p>
             </div>
           </div>
@@ -288,7 +244,9 @@ export default function Dashboard() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">Where It Helps Most</h2>
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              Where It Helps Most
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -301,10 +259,14 @@ export default function Dashboard() {
                   <div className="w-20 h-20 bg-[#92278F]/10 rounded-full flex items-center justify-center mx-auto mb-6 text-[#92278F]">
                     {feature.icon}
                   </div>
-                  <CardTitle className="text-xl font-bold text-gray-900 tracking-tight">{feature.title}</CardTitle>
+                  <CardTitle className="text-xl font-bold text-gray-900 tracking-tight">
+                    {feature.title}
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-gray-600 text-center leading-relaxed">{feature.description}</p>
+                  <p className="text-gray-600 text-center leading-relaxed">
+                    {feature.description}
+                  </p>
                 </CardContent>
               </Card>
             ))}
@@ -316,7 +278,9 @@ export default function Dashboard() {
       <section className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">How It Works</h2>
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              How It Works
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -326,8 +290,12 @@ export default function Dashboard() {
                   {step.step}
                 </div>
                 <div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight">{step.title}</h3>
-                  <p className="text-gray-600 leading-relaxed text-lg">{step.description}</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-4 tracking-tight">
+                    {step.title}
+                  </h3>
+                  <p className="text-gray-600 leading-relaxed text-lg">
+                    {step.description}
+                  </p>
                 </div>
               </div>
             ))}
@@ -339,7 +307,9 @@ export default function Dashboard() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">What Makes It Different</h2>
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              What Makes It Different
+            </h2>
           </div>
 
           <div className="max-w-5xl mx-auto">
@@ -347,7 +317,9 @@ export default function Dashboard() {
               {differentiators.map((item, index) => (
                 <div key={index} className="flex items-start space-x-4">
                   <CheckCircle className="w-7 h-7 text-[#92278F] flex-shrink-0 mt-1" />
-                  <p className="text-lg text-gray-700 leading-relaxed font-medium">{item}</p>
+                  <p className="text-lg text-gray-700 leading-relaxed font-medium">
+                    {item}
+                  </p>
                 </div>
               ))}
             </div>
@@ -359,10 +331,13 @@ export default function Dashboard() {
       <section className="py-24 bg-gray-50">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">Five Core Influence Styles</h2>
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              Five Core Influence Styles
+            </h2>
             <p className="text-xl text-gray-600 max-w-4xl mx-auto leading-relaxed">
-              The Influence Engine™ adapts to your unique communication style, ensuring every conversation is tailored
-              to your preferences and personality.
+              The Influence Engine™ adapts to your unique communication style,
+              ensuring every conversation is tailored to your preferences and
+              personality.
             </p>
           </div>
 
@@ -372,10 +347,14 @@ export default function Dashboard() {
                 key={index}
                 className="flex items-center space-x-4 bg-white rounded-full px-8 py-6 hover:shadow-lg transition-all duration-300 hover:scale-105 border border-gray-200"
               >
-                <div className={`w-14 h-14 ${style.color} rounded-full flex items-center justify-center text-white`}>
+                <div
+                  className={`w-14 h-14 ${style.color} rounded-full flex items-center justify-center text-white`}
+                >
                   {style.icon}
                 </div>
-                <span className="text-xl font-bold text-gray-900 tracking-tight">{style.name}</span>
+                <span className="text-xl font-bold text-gray-900 tracking-tight">
+                  {style.name}
+                </span>
               </div>
             ))}
           </div>
@@ -386,7 +365,9 @@ export default function Dashboard() {
       <section className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
-            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">Trial + Community Access</h2>
+            <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
+              Trial + Community Access
+            </h2>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
@@ -398,8 +379,9 @@ export default function Dashboard() {
               </CardHeader>
               <CardContent className="text-center">
                 <p className="text-gray-600 mb-8 text-lg leading-relaxed">
-                  Take the quiz → Interact with The Influence Engine™ in real time → Unlock your full Influence Style
-                  toolkit after your trial.
+                  Take the quiz → Interact with The Influence Engine™ in real
+                  time → Unlock your full Influence Style toolkit after your
+                  trial.
                 </p>
                 <Button className="bg-[#92278F] hover:bg-[#7a1f78] text-white text-lg px-10 py-4 font-semibold tracking-wide">
                   Start Free Trial
@@ -414,7 +396,9 @@ export default function Dashboard() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="text-center">
-                <p className="text-gray-600 mb-6 text-lg">After the trial, gain access to:</p>
+                <p className="text-gray-600 mb-6 text-lg">
+                  After the trial, gain access to:
+                </p>
                 <ul className="text-gray-600 text-left mb-8 space-y-3 text-lg">
                   <li>• The Notion resource hub</li>
                   <li>• Slack support channels</li>
@@ -438,11 +422,14 @@ export default function Dashboard() {
           <h2 className="text-5xl font-bold mb-8 tracking-tight leading-tight">
             Built From Coaching. Calibrated To You.
           </h2>
-          <p className="text-2xl mb-4 font-medium">The Influence Engine™ doesn't replace your voice.</p>
+          <p className="text-2xl mb-4 font-medium">
+            The Influence Engine™ doesn't replace your voice.
+          </p>
           <p className="text-2xl font-bold mb-12">It strengthens it.</p>
           <p className="text-lg mb-12 text-white/90 leading-relaxed max-w-4xl mx-auto">
-            Whether you're handling objections, preparing for a critical conversation, or searching for the right words
-            under pressure—this is coaching that helps you speak with clarity, not conformity.
+            Whether you're handling objections, preparing for a critical
+            conversation, or searching for the right words under pressure—this
+            is coaching that helps you speak with clarity, not conformity.
           </p>
           <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
@@ -468,28 +455,44 @@ export default function Dashboard() {
         <div className="max-w-7xl mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-6 md:mb-0">
-              <img src="/logo.png" alt="Logo" className="w-10 h-10 rounded-full mr-3 inline-block" />
-              <span className="text-2xl font-bold text-white align-middle tracking-tight">The Influence Engine™</span>
+              <img
+                src="/logo.png"
+                alt="Logo"
+                className="w-10 h-10 rounded-full mr-3 inline-block"
+              />
+              <span className="text-2xl font-bold text-white align-middle tracking-tight">
+                The Influence Engine™
+              </span>
             </div>
             <div className="flex space-x-8 text-gray-300">
-              <a href="#" className="hover:text-white transition-colors duration-200 font-medium">
+              <a
+                href="#"
+                className="hover:text-white transition-colors duration-200 font-medium"
+              >
                 Privacy Policy
               </a>
-              <a href="#" className="hover:text-white transition-colors duration-200 font-medium">
+              <a
+                href="#"
+                className="hover:text-white transition-colors duration-200 font-medium"
+              >
                 Terms of Service
               </a>
-              <a href="#" className="hover:text-white transition-colors duration-200 font-medium">
+              <a
+                href="#"
+                className="hover:text-white transition-colors duration-200 font-medium"
+              >
                 Support
               </a>
             </div>
           </div>
           <div className="text-center mt-8">
             <p className="text-gray-400 font-medium">
-              &copy; {new Date().getFullYear()} The Influence Engine™. All rights reserved.
+              &copy; {new Date().getFullYear()} The Influence Engine™. All
+              rights reserved.
             </p>
           </div>
         </div>
       </footer>
     </div>
-  )
+  );
 }
