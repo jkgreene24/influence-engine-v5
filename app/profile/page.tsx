@@ -292,7 +292,7 @@ export default function Profile() {
 
   const getInfluenceStyleColor = (styleId: string) => {
     const style = influenceStyles.find((s) => s.id === styleId);
-    return style ? style.color : "bg-gray-500";
+    return style ? style.color : "bg-gray-1000";
   };
 
   const getInfluenceStyleName = (styleId: string) => {
@@ -364,7 +364,7 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-100">
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -575,7 +575,7 @@ export default function Profile() {
                         type="email"
                         value={email}
                         disabled
-                        className="pl-10 h-12 border-gray-300 bg-gray-50 text-gray-500"
+                        className="pl-10 h-12 border-gray-300 bg-gray-100 text-gray-500"
                       />
                     </div>
                     <p className="text-xs text-gray-500 mt-1">
@@ -695,7 +695,7 @@ export default function Profile() {
 
                   {/* Live Preview */}
                   {primaryStyle && (
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
+                    <div className="bg-gray-100 border border-gray-200 rounded-lg p-4">
                       <h4 className="text-sm font-medium text-gray-700 mb-3">
                         Preview Your Style
                       </h4>

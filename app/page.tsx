@@ -213,7 +213,7 @@ export default function Dashboard() {
       </section>
 
       {/* What Is The Influence Engine Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-bold text-gray-900 mb-8 tracking-tight leading-tight">
@@ -275,7 +275,7 @@ export default function Dashboard() {
       </section>
 
       {/* How It Works Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
@@ -328,7 +328,7 @@ export default function Dashboard() {
       </section>
 
       {/* Influence Styles Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-24 bg-gray-100">
         <div className="max-w-7xl mx-auto px-6">
           <div className="text-center mb-20">
             <h2 className="text-5xl font-bold text-gray-900 mb-6 tracking-tight">
