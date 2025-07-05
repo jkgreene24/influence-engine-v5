@@ -84,6 +84,7 @@ const influenceStyles: InfluenceStyle[] = [
 ];
 
 export default function Profile() {
+  const supabase = createClient();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [firstName, setFirstName] = useState("");
@@ -100,7 +101,6 @@ export default function Profile() {
 
   useEffect(() => {
     const fetchUserAndProfile = async () => {
-      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -172,8 +172,6 @@ export default function Profile() {
     setAvatarUploading(true);
 
     try {
-      const supabase = createClient();
-
       // Create a unique filename
       const fileExt = file.name.split(".").pop();
       const fileName = `${user?.id}-${Date.now()}.${fileExt}`;
@@ -224,8 +222,6 @@ export default function Profile() {
     setLoading(true);
 
     try {
-      const supabase = createClient();
-
       // Update auth metadata
       const { error: authError } = await supabase.auth.updateUser({
         data: {

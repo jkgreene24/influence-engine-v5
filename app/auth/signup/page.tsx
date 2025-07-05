@@ -28,11 +28,11 @@ export default function SignUp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const supabase = createClient();
 
   // Add this test function to verify Supabase connection
   const testSupabaseConnection = async () => {
     try {
-      const supabase = createClient();
       const { data, error } = await supabase
         .from("profiles")
         .select("count", { count: "exact" });
@@ -71,8 +71,6 @@ export default function SignUp() {
     }
 
     try {
-      const supabase = createClient();
-
       // Add debugging
       console.log("Attempting to sign up with:", {
         email,
@@ -112,7 +110,6 @@ export default function SignUp() {
 
   const handleGoogleSignUp = async () => {
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

@@ -10,6 +10,8 @@ import { ArrowLeft, Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 
 export default function SignIn() {
+  const supabase = createClient();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -22,7 +24,6 @@ export default function SignIn() {
     setError(null);
 
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
@@ -43,7 +44,6 @@ export default function SignIn() {
 
   const handleGoogleSignIn = async () => {
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
         options: {

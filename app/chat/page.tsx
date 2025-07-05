@@ -92,6 +92,7 @@ const getInfluenceIcon = (style: string) => {
 };
 
 export default function ChatInterface() {
+  const supabase = createClient();
   const [currentUser] = useState<ChatUser>({
     id: "user-1",
     name: "You",
@@ -134,7 +135,6 @@ export default function ChatInterface() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const supabase = createClient();
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -279,7 +279,6 @@ export default function ChatInterface() {
   };
 
   const handleLogout = async () => {
-    const supabase = createClient();
     await supabase.auth.signOut();
     window.location.href = "/";
   };
