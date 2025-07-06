@@ -24,12 +24,16 @@ import { createClient } from "@/lib/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
 
 interface User {
-  user_uuid: string;
-  user_name: string;
-  user_influence_style: string; // Changed from specific union to string to support blended styles
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+  is_admin: boolean;
   avatar: string;
   status: "online" | "offline" | "away";
   color: string;
+  primary_influence_style: string;
+  secondary_influence_style: string;
 }
 
 const getRandomInfluenceStyle = () => {
@@ -253,21 +257,25 @@ The system uses advanced machine learning algorithms trained on decades of meteo
       const supabase = createClient();
 
       const { data, error } = await supabase
-        .from("user_table")
-        .select("user_uuid, user_name, user_influence_style")
-        .order("user_name");
+        .from("profiles")
+        .select("*")
+        .order("first_name");
 
       if (error) {
         throw error;
       }
 
       const formattedUsers: User[] = data.map((user, index) => ({
-        user_uuid: user.user_uuid,
-        user_name: user.user_name,
-        user_influence_style: getRandomInfluenceStyle(), // Generate random style (blended or single)
-        avatar: generateAvatar(user.user_name),
+        user_id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        is_admin: user.is_admin,
+        avatar: generateAvatar(user.first_name),
         status: getRandomStatus(),
         color: getRandomColor(index),
+        primary_influence_style: user.primary_influence_style,
+        secondary_influence_style: user.secondary_influence_style,
       }));
 
       setUsers(formattedUsers);
@@ -281,8 +289,9 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 
   const filteredUsers = users.filter(
     (user) =>
-      user.user_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.user_influence_style.toLowerCase().includes(searchTerm.toLowerCase())
+      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleUserClick = (user: User) => {
@@ -290,9 +299,9 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     localStorage.setItem(
       "selectedUser",
       JSON.stringify({
-        id: user.user_uuid,
-        name: user.user_name,
-        influenceStyle: user.user_influence_style,
+        id: user.user_id,
+        name: user.first_name,
+        influenceStyle: user.is_admin,
         avatar: user.avatar,
         status: user.status,
         color: user.color,
@@ -511,7 +520,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredUsers.map((user) => (
             <Card
-              key={user.user_uuid}
+              key={user.user_id}
               className="hover:shadow-lg transition-all duration-300 cursor-pointer border-2 hover:border-[#92278F]/30 group"
               onClick={() => handleUserClick(user)}
             >
@@ -533,7 +542,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                   </div>
                   <div className="flex-1">
                     <CardTitle className="font-inter text-lg text-black group-hover:text-[#92278F] transition-colors capitalize">
-                      {user.user_name}
+                      {user.first_name} {user.last_name}
                     </CardTitle>
                     <p className="text-sm text-gray-600 font-inter capitalize">
                       {user.status}
@@ -550,12 +559,17 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                       className="bg-[#92278F]/10 text-[#92278F] hover:bg-[#92278F]/20 font-inter text-sm px-3 py-1 flex items-center space-x-2"
                     >
                       <div className="text-[#92278F]">
-                        {getInfluenceIcon(user.user_influence_style)}
+                        {getInfluenceIcon(
+                          user.primary_influence_style +
+                            (user.secondary_influence_style
+                              ? "-" + user.secondary_influence_style
+                              : "")
+                        )}
                       </div>
                       {/* Show name only for single styles */}
-                      {!user.user_influence_style.includes("-") && (
+                      {!user.secondary_influence_style && (
                         <span className="capitalize">
-                          {user.user_influence_style}
+                          {user.primary_influence_style}
                         </span>
                       )}
                     </Badge>
