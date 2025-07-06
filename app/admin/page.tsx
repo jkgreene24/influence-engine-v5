@@ -188,6 +188,28 @@ export default function AdminDashboard() {
     "message" | "text" | "json"
   >("message");
 
+  // Enhanced search function that supports multiple terms
+  const matchesSearchTerms = (user: User, searchTerms: string[]): boolean => {
+    // If no search terms, show all users
+    if (searchTerms.length === 0) return true;
+
+    // Create searchable text from user data
+    const searchableText = [
+      user.first_name,
+      user.last_name,
+      user.primary_influence_style,
+      user.secondary_influence_style,
+    ]
+      .filter(Boolean) // Remove empty/null values
+      .join(" ")
+      .toLowerCase();
+
+    // Check if ALL search terms are found in the searchable text
+    return searchTerms.every((term) =>
+      searchableText.includes(term.toLowerCase())
+    );
+  };
+
   const getPlaceholderText = (type: "message" | "text" | "json") => {
     switch (type) {
       case "message":
@@ -281,12 +303,15 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     }
   };
 
-  const filteredUsers = users.filter(
-    (user) =>
-      user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredUsers = users.filter((user) => {
+    // Split search term into individual terms and filter out empty strings
+    const searchTerms = searchTerm
+      .trim()
+      .split(/\s+/)
+      .filter((term) => term.length > 0);
+
+    return matchesSearchTerms(user, searchTerms);
+  });
 
   const handleUserClick = (user: User) => {
     // Store user data in localStorage for the admin chat interface
@@ -488,7 +513,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
             <Input
               type="text"
-              placeholder="Search users or influence styles..."
+              placeholder="Search by name or influence style (e.g., 'john catalyst')..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/70 focus:bg-white/20 font-inter"
