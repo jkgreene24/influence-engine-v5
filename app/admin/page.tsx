@@ -177,7 +177,6 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [showSettings, setShowSettings] = useState(false);
   const [systemInstruction, setSystemInstruction] = useState("");
-  const [fineTuningFile, setFineTuningFile] = useState<File | null>(null);
   const [settingsLoading, setSettingsLoading] = useState(false);
   const [fineTuningData, setFineTuningData] = useState("");
   const [ingestLoading, setIngestLoading] = useState(false);
@@ -239,11 +238,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     if (savedSystemInstruction) {
       setSystemInstruction(savedSystemInstruction);
     }
-
-    const savedFineTuningData = localStorage.getItem("fine_tuning_data");
-    if (savedFineTuningData) {
-      setFineTuningData(savedFineTuningData);
-    }
   }, []);
 
   const fetchUsers = async () => {
@@ -299,9 +293,12 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     localStorage.setItem(
       "selectedUser",
       JSON.stringify({
-        id: user.user_id,
-        name: user.first_name,
-        influenceStyle: user.is_admin,
+        user_id: user.user_id,
+        first_name: user.first_name,
+        last_name: user.last_name,
+        email: user.email,
+        primary_influence_style: user.primary_influence_style,
+        secondary_influence_style: user.secondary_influence_style,
         avatar: user.avatar,
         status: user.status,
         color: user.color,
@@ -358,10 +355,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 
       // Simulate API call to ingest data (replace with actual OpenAI API call)
       await new Promise((resolve) => setTimeout(resolve, 2000));
-
-      // Save to localStorage with type information
-      localStorage.setItem("fine_tuning_data", fineTuningData);
-      localStorage.setItem("fine_tuning_data_type", fineTuningDataType);
 
       setToast({
         type: "success",
