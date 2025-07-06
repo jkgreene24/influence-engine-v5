@@ -18,13 +18,44 @@ export default function SignIn() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const upsertUserProfile = async (user: any) => {
+    try {
+      // Extract metadata from auth user
+      const userMetadata = user.user_metadata || {};
+      const { first_name, last_name } = userMetadata;
+
+      // Prepare profile data for upsert
+      const profileData = {
+        user_id: user.id,
+        first_name: first_name,
+        last_name: last_name,
+        email: user.email,
+        updated_at: new Date().toISOString(),
+      };
+
+      // Upsert the profile data
+      const { data, error } = await supabase
+        .from("profiles")
+        .upsert(profileData, {
+          onConflict: "user_id",
+          ignoreDuplicates: false,
+        })
+        .select()
+        .single();
+      return data;
+    } catch (err) {
+      console.error("Error in upsertUserProfile:", err);
+      // Don't throw error here as it's not critical for signin
+    }
+  };
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
@@ -33,7 +64,12 @@ export default function SignIn() {
         setError(error.message);
       } else {
         // Redirect to dashboard or chat
-        window.location.href = "/chat";
+        const profile = await upsertUserProfile(data.user);
+        if (profile.is_admin) {
+          window.location.href = "/admin";
+        } else {
+          window.location.href = "/chat";
+        }
       }
     } catch (err) {
       setError("An unexpected error occurred");
