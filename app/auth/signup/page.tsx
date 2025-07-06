@@ -87,6 +87,7 @@ export default function SignUp() {
             last_name: lastName.trim(),
             full_name: `${firstName.trim()} ${lastName.trim()}`, // Keep for compatibility
           },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <title>Confirm your email</title>
+    <style>
+      body { font-family: Arial, sans-serif; background: #f9f9f9; }
+      .container { background: #fff; padding: 32px; border-radius: 8px; max-width: 480px; margin: 40px auto; }
+      .btn { background: #92278F; color: #fff; padding: 12px 24px; border-radius: 4px; text-decoration: none; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h2>Welcome to Influence Engine™!</h2>
+      <p>Thank you for signing up. Please confirm your email address by clicking the button below:</p>
+      <p>
+        <a class="btn" href="{{ .ConfirmationURL }}">Confirm Email</a>
+      </p>
+      <p>If you did not sign up, you can ignore this email.</p>
+      <p>— The Influence Engine™ Team</p>
+    </div>
+  </body>
+</html>

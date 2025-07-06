@@ -34,25 +34,80 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protected routes that require authentication
-  const protectedRoutes = ["/chat", "/admin"]
-  const isProtectedRoute = protectedRoutes.some((route) => request.nextUrl.pathname.startsWith(route))
+  // Define route access rules
+  const adminRoutes = ["/admin", "/admin-chat"]
+  const userRoutes = ["/chat", "/profile", "/subscription"]
+  const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error", "/auth/email-confirmed"]
+  
+  const isAdminRoute = adminRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+  const isUserRoute = userRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+  const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+  const isProtectedRoute = isAdminRoute || isUserRoute
 
-  if (!user && isProtectedRoute && !request.nextUrl.pathname.startsWith("/auth")) {
-    // no user, redirect to sign in page
+  // If no user and trying to access protected routes, redirect to signin
+  if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
     url.pathname = "/auth/signin"
     return NextResponse.redirect(url)
   }
 
-  // If user is signed in and tries to access auth pages, redirect to chat
-  if (
-    user &&
-    (request.nextUrl.pathname.startsWith("/auth/signin") || request.nextUrl.pathname.startsWith("/auth/signup"))
-  ) {
+  // If user is signed in and tries to access auth pages (except email-confirmed), redirect based on role
+  if (user && isAuthRoute && !request.nextUrl.pathname.startsWith("/auth/email-confirmed")) {
     const url = request.nextUrl.clone()
-    url.pathname = "/chat"
+    
+    // Get user profile to check admin status
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single()
+      
+      if (profile?.is_admin) {
+        url.pathname = "/admin"
+      } else {
+        url.pathname = "/chat"
+      }
+    } catch (error) {
+      // If profile not found, default to chat
+      url.pathname = "/chat"
+    }
+    
     return NextResponse.redirect(url)
+  }
+
+  // Role-based access control for authenticated users
+  if (user && isProtectedRoute) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single()
+      
+      const isAdmin = profile?.is_admin || false
+      
+      // Admin users can only access admin routes
+      if (isAdmin && !isAdminRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/admin"
+        return NextResponse.redirect(url)
+      }
+      
+      // Regular users can only access user routes
+      if (!isAdmin && !isUserRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/chat"
+        return NextResponse.redirect(url)
+      }
+    } catch (error) {
+      // If profile not found, redirect to chat
+      if (isAdminRoute) {
+        const url = request.nextUrl.clone()
+        url.pathname = "/chat"
+        return NextResponse.redirect(url)
+      }
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is.
