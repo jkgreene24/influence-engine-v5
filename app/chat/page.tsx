@@ -409,12 +409,7 @@ export default function ChatInterface() {
                   className="relative h-10 w-10 rounded-full border-2 border-white/20 hover:border-white/40"
                 >
                   <Avatar className="h-9 w-9">
-                    <AvatarImage
-                      src={
-                        user?.user_metadata?.avatar_url || "/placeholder.svg"
-                      }
-                      alt={user?.user_metadata?.full_name || user?.email}
-                    />
+                    <AvatarImage src={user?.user_metadata?.avatar_url} />
                     <AvatarFallback className="bg-white text-[#92278F] font-semibold">
                       {getUserInitials(user)}
                     </AvatarFallback>

@@ -404,8 +404,8 @@ export default function Profile() {
                 >
                   <Avatar className="h-24 w-24 transition-all duration-200 group-hover:brightness-75">
                     <AvatarImage
-                      src={avatarUrl || "/placeholder.svg"}
-                      alt={`${firstName} ${lastName}` || user?.email}
+                      src={avatarUrl}
+                      alt={`${firstName} ${lastName}`}
                     />
                     <AvatarFallback className="bg-[#92278F] text-white text-2xl font-bold">
                       {getUserInitials()}
