@@ -285,6 +285,7 @@ The system uses advanced machine learning algorithms trained on decades of meteo
       const { data, error } = await supabase
         .from("profiles")
         .select("*")
+        .eq("is_admin", false)
         .order("first_name");
 
       if (error) {
