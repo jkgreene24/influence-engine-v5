@@ -5,7 +5,7 @@ const upsertUserProfile = async (supabase: any, user: any) => {
   try {
     // Extract metadata from auth user
     const userMetadata = user.user_metadata || {};
-    const { first_name, last_name } = userMetadata;
+    const { first_name, last_name, primary_influence_style, secondary_influence_style } = userMetadata;
 
     // Prepare profile data for upsert
     const profileData = {
@@ -14,6 +14,8 @@ const upsertUserProfile = async (supabase: any, user: any) => {
       last_name: last_name || "",
       email: user.email || "",
       updated_at: new Date().toISOString(),
+      primary_influence_style: primary_influence_style || null,
+      secondary_influence_style: secondary_influence_style || null,
     };
 
     // Upsert the profile data

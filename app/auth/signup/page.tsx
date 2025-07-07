@@ -1,7 +1,6 @@
 "use client";
 
 import React from "react";
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,8 +13,65 @@ import {
   Mail,
   Lock,
   User,
+  Zap,
+  Users,
+  Anchor,
+  Link,
+  Navigation,
+  Sparkles,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useSearchParams } from "next/navigation";
+
+interface InfluenceStyle {
+  id: string;
+  name: string;
+  icon: React.ReactNode;
+  color: string;
+  description: string;
+}
+
+const influenceStyles: InfluenceStyle[] = [
+  {
+    id: "catalyst",
+    name: "Catalyst",
+    icon: <Zap className="w-5 h-5" />,
+    color: "bg-orange-500",
+    description:
+      "Energetic change-makers who inspire action and drive innovation",
+  },
+  {
+    id: "diplomat",
+    name: "Diplomat",
+    icon: <Users className="w-5 h-5" />,
+    color: "bg-blue-500",
+    description:
+      "Skilled negotiators who build consensus and foster collaboration",
+  },
+  {
+    id: "anchor",
+    name: "Anchor",
+    icon: <Anchor className="w-5 h-5" />,
+    color: "bg-green-500",
+    description: "Steady leaders who provide stability and reliable guidance",
+  },
+  {
+    id: "connector",
+    name: "Connector",
+    icon: <Link className="w-5 h-5" />,
+    color: "bg-purple-500",
+    description:
+      "Natural networkers who bridge relationships and create opportunities",
+  },
+  {
+    id: "navigator",
+    name: "Navigator",
+    icon: <Navigation className="w-5 h-5" />,
+    color: "bg-red-500",
+    description:
+      "Strategic thinkers who chart the course and guide others forward",
+  },
+];
 
 export default function SignUp() {
   const [firstName, setFirstName] = useState("");
@@ -29,6 +85,16 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const supabase = createClient();
+
+  const searchParams = useSearchParams();
+  const primaryStyle = searchParams.get("primary_style") || "";
+  const secondaryStyle = searchParams.get("secondary_style") || "";
+
+  // Get style information
+  const primaryStyleInfo = influenceStyles.find((s) => s.id === primaryStyle);
+  const secondaryStyleInfo = influenceStyles.find(
+    (s) => s.id === secondaryStyle
+  );
 
   // Add this test function to verify Supabase connection
   const testSupabaseConnection = async () => {
@@ -71,13 +137,6 @@ export default function SignUp() {
     }
 
     try {
-      // Add debugging
-      console.log("Attempting to sign up with:", {
-        email,
-        firstName,
-        lastName,
-      });
-
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -86,6 +145,8 @@ export default function SignUp() {
             first_name: firstName.trim(),
             last_name: lastName.trim(),
             full_name: `${firstName.trim()} ${lastName.trim()}`, // Keep for compatibility
+            primary_influence_style: primaryStyle || null,
+            secondary_influence_style: secondaryStyle || null,
           },
           emailRedirectTo: `${window.location.origin}/auth/callback`,
         },
@@ -109,6 +170,54 @@ export default function SignUp() {
     }
   };
 
+  const getInfluenceStyleDisplay = () => {
+    if (!primaryStyleInfo) return null;
+
+    if (secondaryStyleInfo) {
+      return (
+        <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border">
+          <div className="flex items-center space-x-3">
+            <div
+              className={`w-12 h-12 rounded-full ${primaryStyleInfo.color} flex items-center justify-center text-white`}
+            >
+              {primaryStyleInfo.icon}
+            </div>
+            <div className="flex flex-col items-center justify-center h-12">
+              <span className="text-lg font-medium text-gray-500">+</span>
+            </div>
+            <div
+              className={`w-12 h-12 rounded-full ${secondaryStyleInfo.color} flex items-center justify-center text-white`}
+            >
+              {secondaryStyleInfo.icon}
+            </div>
+          </div>
+          <div className="flex-1">
+            <h3 className="font-semibold text-gray-900">
+              {primaryStyleInfo.name} + {secondaryStyleInfo.name}
+            </h3>
+            <p className="text-sm text-gray-600">Blended Influence Style</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border">
+        <div
+          className={`w-12 h-12 rounded-full ${primaryStyleInfo.color} flex items-center justify-center text-white`}
+        >
+          {primaryStyleInfo.icon}
+        </div>
+        <div className="flex-1">
+          <h3 className="font-semibold text-gray-900">
+            {primaryStyleInfo.name}
+          </h3>
+          <p className="text-sm text-gray-600">Primary Influence Style</p>
+        </div>
+      </div>
+    );
+  };
+
   if (success) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
@@ -126,6 +235,9 @@ export default function SignUp() {
                 Please check your email and click the link to activate your
                 account.
               </p>
+              {primaryStyleInfo && (
+                <div className="mb-4">{getInfluenceStyleDisplay()}</div>
+              )}
               <Button
                 onClick={() => (window.location.href = "/")}
                 className="bg-[#92278F] hover:bg-[#7a1f78]"
@@ -152,116 +264,115 @@ export default function SignUp() {
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          <img
-            src="/logo.png"
-            alt="Logo"
-            className="w-16 h-16 rounded-full mx-auto mb-4"
-          />
-          <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
+          <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Create your account
           </h2>
-          <p className="mt-2 text-gray-600">
-            Join The Influence Engine™ and start your journey
+          <p className="text-gray-600">
+            Join us with your unique influence style
           </p>
         </div>
 
-        {/* Sign Up Form */}
-        <Card className="border-2 border-gray-200">
+        {/* Influence Style Display */}
+        {primaryStyleInfo && (
+          <Card className="border-2 border-[#92278F]/20 bg-[#92278F]/5">
+            <CardContent className="p-4">
+              <div className="flex items-center space-x-2 mb-3">
+                <Sparkles className="w-5 h-5 text-[#92278F]" />
+                <span className="text-sm font-medium text-gray-700">
+                  Your Influence Style
+                </span>
+              </div>
+              {getInfluenceStyleDisplay()}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Signup Form */}
+        <Card>
           <CardHeader>
-            <CardTitle className="text-center text-xl font-semibold text-gray-900">
-              Sign Up
-            </CardTitle>
+            <CardTitle className="text-xl">Account Details</CardTitle>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSignUp} className="space-y-6">
-              {error && (
-                <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-                  <p className="text-sm text-red-700">{error}</p>
-                </div>
-              )}
-
-              {/* First Name and Last Name Row */}
+            <form onSubmit={handleSignUp} className="space-y-4">
+              {/* Name Fields */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <label
                     htmlFor="firstName"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="text-sm font-medium text-gray-700"
                   >
-                    First name
+                    First Name
                   </label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
                       id="firstName"
                       type="text"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
                       placeholder="First name"
-                      className="pl-10 h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]"
+                      className="pl-10"
                       required
                     />
                   </div>
                 </div>
-
-                <div>
+                <div className="space-y-2">
                   <label
                     htmlFor="lastName"
-                    className="block text-sm font-medium text-gray-700 mb-2"
+                    className="text-sm font-medium text-gray-700"
                   >
-                    Last name
+                    Last Name
                   </label>
-                  <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-                    <Input
-                      id="lastName"
-                      type="text"
-                      value={lastName}
-                      onChange={(e) => setLastName(e.target.value)}
-                      placeholder="Last name"
-                      className="pl-10 h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]"
-                      required
-                    />
-                  </div>
+                  <Input
+                    id="lastName"
+                    type="text"
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                    placeholder="Last name"
+                    required
+                  />
                 </div>
               </div>
 
-              <div>
+              {/* Email Field */}
+              <div className="space-y-2">
                 <label
                   htmlFor="email"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="text-sm font-medium text-gray-700"
                 >
-                  Email address
+                  Email Address
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     id="email"
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="Enter your email"
-                    className="pl-10 h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]"
+                    className="pl-10"
                     required
                   />
                 </div>
               </div>
 
-              <div>
+              {/* Password Fields */}
+              <div className="space-y-2">
                 <label
                   htmlFor="password"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="text-sm font-medium text-gray-700"
                 >
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Create a password"
-                    className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]"
+                    className="pl-10 pr-10"
                     required
                   />
                   <button
@@ -270,30 +381,30 @@ export default function SignUp() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff className="w-4 h-4" />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-4 h-4" />
                     )}
                   </button>
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <label
                   htmlFor="confirmPassword"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="text-sm font-medium text-gray-700"
                 >
-                  Confirm password
+                  Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     id="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Confirm your password"
-                    className="pl-10 pr-10 h-12 border-gray-300 focus:border-[#92278F] focus:ring-[#92278F]"
+                    className="pl-10 pr-10"
                     required
                   />
                   <button
@@ -302,47 +413,26 @@ export default function SignUp() {
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
                     {showConfirmPassword ? (
-                      <EyeOff className="w-5 h-5" />
+                      <EyeOff className="w-4 h-4" />
                     ) : (
-                      <Eye className="w-5 h-5" />
+                      <Eye className="w-4 h-4" />
                     )}
                   </button>
                 </div>
               </div>
 
-              <div className="flex items-center">
-                <input
-                  id="terms"
-                  name="terms"
-                  type="checkbox"
-                  className="h-4 w-4 text-[#92278F] focus:ring-[#92278F] border-gray-300 rounded"
-                  required
-                />
-                <label
-                  htmlFor="terms"
-                  className="ml-2 block text-sm text-gray-700"
-                >
-                  I agree to the{" "}
-                  <a
-                    href="#"
-                    className="text-[#92278F] hover:text-[#7a1f78] font-medium"
-                  >
-                    Terms of Service
-                  </a>{" "}
-                  and{" "}
-                  <a
-                    href="#"
-                    className="text-[#92278F] hover:text-[#7a1f78] font-medium"
-                  >
-                    Privacy Policy
-                  </a>
-                </label>
-              </div>
+              {/* Error Message */}
+              {error && (
+                <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                  <p className="text-sm text-red-600">{error}</p>
+                </div>
+              )}
 
+              {/* Submit Button */}
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full bg-[#92278F] hover:bg-[#7a1f78] text-white h-12 font-semibold"
+                className="w-full bg-[#92278F] hover:bg-[#7a1f78] text-white"
               >
                 {loading ? (
                   <div className="flex items-center space-x-2">
@@ -351,22 +441,24 @@ export default function SignUp() {
                   </div>
                 ) : (
                   <div className="flex items-center space-x-2">
-                    <UserPlus className="w-5 h-5" />
+                    <UserPlus className="w-4 h-4" />
                     <span>Create Account</span>
                   </div>
                 )}
               </Button>
             </form>
 
+            {/* Sign In Link */}
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
                 Already have an account?{" "}
-                <a
-                  href="/auth/signin"
-                  className="text-[#92278F] hover:text-[#7a1f78] font-medium"
+                <Button
+                  variant="link"
+                  onClick={() => (window.location.href = "/auth/signin")}
+                  className="text-[#92278F] hover:text-[#7a1f78] p-0 h-auto"
                 >
                   Sign in
-                </a>
+                </Button>
               </p>
             </div>
           </CardContent>

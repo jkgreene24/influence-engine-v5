@@ -157,7 +157,7 @@ export default function Dashboard() {
                 About
               </a>
               <a
-                href="#quiz"
+                href="/quiz"
                 className="text-gray-700 hover:text-[#92278F] transition-colors duration-200 font-medium"
               >
                 Quiz
@@ -218,6 +218,7 @@ export default function Dashboard() {
                 className="bg-white text-[#92278F] hover:bg-white/95 text-lg px-10 py-4 font-semibold tracking-wide flex items-center space-x-3 shadow-lg"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
+                onClick={() => (window.location.href = "/quiz")}
               >
                 <Play className="w-5 h-5" />
                 <span>Take the Style Quiz to Begin</span>
@@ -345,7 +346,7 @@ export default function Dashboard() {
             </h2>
           </div>
 
-          <div className="max-w-5xl mx-auto">
+          <div className="max-w-2xl mx-auto">
             <div className="grid grid-cols-1 gap-6">
               {differentiators.map((item, index) => (
                 <div key={index} className="flex items-start space-x-4">
@@ -416,7 +417,10 @@ export default function Dashboard() {
                   time → Unlock your full Influence Style toolkit after your
                   trial.
                 </p>
-                <Button className="bg-[#92278F] hover:bg-[#7a1f78] text-white text-lg px-10 py-4 font-semibold tracking-wide">
+                <Button
+                  onClick={() => (window.location.href = "/quiz")}
+                  className="bg-[#92278F] hover:bg-[#7a1f78] text-white text-lg px-10 py-4 font-semibold tracking-wide"
+                >
                   Start Free Trial
                 </Button>
               </CardContent>
@@ -468,6 +472,7 @@ export default function Dashboard() {
             <Button
               size="lg"
               className="bg-white text-[#92278F] hover:bg-white/95 text-lg px-10 py-4 font-semibold tracking-wide"
+              onClick={() => (window.location.href = "/quiz")}
             >
               Take the Style Quiz Now
             </Button>
