@@ -1,5 +1,6 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   MessageCircle,
@@ -13,11 +14,34 @@ import {
   CheckCircle,
   Play,
   LogIn,
+  User,
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export default function Dashboard() {
   const [isHovered, setIsHovered] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const supabase = createClient();
+
+    // Get the current session from browser cache (no network)
+    supabase.auth.getSession().then(({ data }) => {
+      setUser(data.session?.user ?? null);
+    });
+
+    // Listen for auth state changes (login/logout)
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        setUser(session?.user ?? null);
+      }
+    );
+
+    // Cleanup on unmount
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
 
   const features = [
     {
@@ -154,8 +178,17 @@ export default function Dashboard() {
                 onClick={() => (window.location.href = "/auth/signin")}
                 className="bg-[#92278F] hover:bg-[#7a1f78] text-white font-medium"
               >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign In
+                {user ? (
+                  <>
+                    <User className="w-4 h-4 mr-2" />
+                    My Account
+                  </>
+                ) : (
+                  <>
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Sign In
+                  </>
+                )}
               </Button>
             </div>
           </div>
