@@ -19,6 +19,7 @@ import {
   Save,
   X,
   Home,
+  LogOut,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Textarea } from "@/components/ui/textarea";
@@ -35,22 +36,6 @@ interface User {
   primary_influence_style: string;
   secondary_influence_style: string;
 }
-
-const getRandomInfluenceStyle = () => {
-  const styles = ["catalyst", "diplomat", "anchor", "connector", "navigator"];
-
-  // 60% chance for blended style, 40% chance for single style
-  const isBlended = Math.random() < 0.6;
-
-  if (isBlended) {
-    // Generate blended style
-    const shuffled = [...styles].sort(() => 0.5 - Math.random());
-    return `${shuffled[0]}-${shuffled[1]}`;
-  } else {
-    // Generate single style
-    return styles[Math.floor(Math.random() * styles.length)];
-  }
-};
 
 const getInfluenceIcon = (style: string) => {
   const styles = style.split("-");
@@ -252,6 +237,31 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     fetchUsers();
   }, []);
 
+  const handleLogout = async () => {
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signOut();
+
+      if (error) {
+        console.error("Error signing out:", error);
+        alert("Error signing out. Please try again.");
+        return;
+      }
+
+      // Clear any stored data
+      localStorage.removeItem("selectedUser");
+      localStorage.removeItem("openai_system_instruction");
+      localStorage.removeItem("fine_tuning_data");
+      localStorage.removeItem("fine_tuning_data_type");
+
+      // Redirect to home page
+      window.location.href = "/";
+    } catch (error) {
+      console.error("Error during logout:", error);
+      alert("Error signing out. Please try again.");
+    }
+  };
+
   useEffect(() => {
     // Load saved settings from localStorage
     const savedSystemInstruction = localStorage.getItem(
@@ -287,7 +297,7 @@ The system uses advanced machine learning algorithms trained on decades of meteo
         last_name: user.last_name,
         email: user.email,
         is_admin: user.is_admin,
-        avatar: generateAvatar(user.first_name),
+        avatar: generateAvatar(user.first_name + " " + user.last_name),
         status: getRandomStatus(),
         color: getRandomColor(index),
         primary_influence_style: user.primary_influence_style,
@@ -505,7 +515,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`}
                 </p>
               </div>
             </div>
-            <div className="w-20"></div> {/* Spacer for balance */}
+            <Button
+              variant="ghost"
+              onClick={handleLogout}
+              className="text-white hover:bg-white/20 p-2 flex items-center space-x-2 border border-white/20"
+            >
+              <LogOut className="w-4 h-4" />
+              <span className="font-inter">Logout</span>
+            </Button>
           </div>
 
           {/* Search Bar */}
