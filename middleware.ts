@@ -38,11 +38,13 @@ export async function middleware(request: NextRequest) {
   const adminRoutes = ["/admin", "/admin-chat"]
   const userRoutes = ["/chat", "/profile", "/subscription"]
   const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error", "/auth/email-confirmed"]
+  const paymentRoutes = ["/payment-setup", "/payment-success"]
   
   const isAdminRoute = adminRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isUserRoute = userRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isAuthRoute = authRoutes.some(route => request.nextUrl.pathname.startsWith(route))
-  const isProtectedRoute = isAdminRoute || isUserRoute
+  const isPaymentRoute = paymentRoutes.some(route => request.nextUrl.pathname.startsWith(route))
+  const isProtectedRoute = isAdminRoute || isUserRoute || isPaymentRoute
 
   // If no user and trying to access protected routes, redirect to signin
   if (!user && isProtectedRoute) {
@@ -51,77 +53,32 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is signed in and tries to access auth pages (except email-confirmed), redirect based on role
-  if (user && isAuthRoute && !request.nextUrl.pathname.startsWith("/auth/email-confirmed")) {
+  // If user is authenticated and trying to access auth routes, redirect to chat
+  if (user && isAuthRoute) {
     const url = request.nextUrl.clone()
-    
-    // Get user profile to check admin status
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("user_id", user.id)
-        .single()
-      
-      if (profile?.is_admin) {
-        url.pathname = "/admin"
-      } else {
-        url.pathname = "/chat"
-      }
-    } catch (error) {
-      // If profile not found, default to chat
-      url.pathname = "/chat"
-    }
-    
+    url.pathname = "/chat"
     return NextResponse.redirect(url)
   }
 
-  // Role-based access control for authenticated users
-  if (user && isProtectedRoute) {
+  // Check if user has completed payment setup for protected routes
+  if (user && (isUserRoute || isAdminRoute)) {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("is_admin")
+        .select("payment_method_added")
         .eq("user_id", user.id)
         .single()
-      
-      const isAdmin = profile?.is_admin || false
-      
-      // Admin users can only access admin routes
-      if (isAdmin && !isAdminRoute) {
+
+      // If user hasn't added payment method and trying to access user routes, redirect to payment setup
+      if (!profile?.payment_method_added && isUserRoute) {
         const url = request.nextUrl.clone()
-        url.pathname = "/admin"
-        return NextResponse.redirect(url)
-      }
-      
-      // Regular users can only access user routes
-      if (!isAdmin && !isUserRoute) {
-        const url = request.nextUrl.clone()
-        url.pathname = "/chat"
+        url.pathname = "/payment-setup"
         return NextResponse.redirect(url)
       }
     } catch (error) {
-      // If profile not found, redirect to chat
-      if (isAdminRoute) {
-        const url = request.nextUrl.clone()
-        url.pathname = "/chat"
-        return NextResponse.redirect(url)
-      }
+      console.error("Error checking payment setup:", error)
     }
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
 }
