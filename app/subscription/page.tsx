@@ -94,11 +94,12 @@ export default function Subscription() {
   const [profile, setProfile] = useState<any>(null);
   const [subscriptionData, setSubscriptionData] =
     useState<SubscriptionData | null>(null);
+  const [paymentMethod, setPaymentMethod] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchUserAndSubscription = async () => {
+    const fetchUserAndData = async () => {
       try {
         const supabase = createClient();
         const {
@@ -119,12 +120,25 @@ export default function Subscription() {
           }
 
           // Fetch subscription status from Stripe
-          const response = await fetch("/api/stripe/subscription/status");
-          if (response.ok) {
-            const data = await response.json();
+          const subscriptionResponse = await fetch(
+            "/api/stripe/subscription/status"
+          );
+          if (subscriptionResponse.ok) {
+            const data = await subscriptionResponse.json();
             setSubscriptionData(data.subscription);
           } else {
             console.error("Failed to fetch subscription data");
+          }
+
+          // Fetch payment method details from Stripe
+          const paymentMethodResponse = await fetch(
+            "/api/stripe/payment-method"
+          );
+          if (paymentMethodResponse.ok) {
+            const data = await paymentMethodResponse.json();
+            setPaymentMethod(data.payment_method);
+          } else {
+            console.error("Failed to fetch payment method data");
           }
         }
       } catch (err) {
@@ -135,7 +149,7 @@ export default function Subscription() {
       }
     };
 
-    fetchUserAndSubscription();
+    fetchUserAndData();
   }, []);
 
   const getUserInitials = () => {
@@ -510,14 +524,14 @@ export default function Subscription() {
                 <span className="text-gray-700">Email</span>
                 <span className="font-medium">{user?.email}</span>
               </div>
-              {/* Advanced Payment Method Display */}
-              {subscriptionData?.payment_method && (
+
+              {/* Payment Method Display - Show regardless of subscription */}
+              {paymentMethod ? (
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   {/* Card Brand Icon */}
                   <div className="flex-shrink-0">
                     {(() => {
-                      const brand =
-                        subscriptionData.payment_method.brand.toLowerCase();
+                      const brand = paymentMethod.brand.toLowerCase();
                       switch (brand) {
                         case "visa":
                           return (
@@ -555,6 +569,7 @@ export default function Subscription() {
                       }
                     })()}
                   </div>
+
                   {/* Card Details */}
                   <div className="flex-1">
                     <div className="flex items-center space-x-2">
@@ -562,36 +577,30 @@ export default function Subscription() {
                         Payment Method:
                       </span>
                       <span className="font-medium text-base">
-                        {subscriptionData.payment_method.brand.toUpperCase()}{" "}
-                        ****{subscriptionData.payment_method.last4}
+                        {paymentMethod.brand.toUpperCase()} ****
+                        {paymentMethod.last4}
                       </span>
                     </div>
                     <div className="flex items-center space-x-2 mt-1">
                       <span className="text-gray-700 text-sm">Expires:</span>
                       <span className="font-medium text-sm">
-                        {String(
-                          subscriptionData.payment_method.exp_month
-                        ).padStart(2, "0")}
-                        /{subscriptionData.payment_method.exp_year}
+                        {String(paymentMethod.exp_month).padStart(2, "0")}/
+                        {paymentMethod.exp_year}
                       </span>
                     </div>
                   </div>
+
                   {/* Card Type Chip */}
                   <div>
                     <span className="inline-block px-2 py-0.5 text-xs bg-gray-200 text-gray-700 rounded">
-                      {subscriptionData.payment_method.funding
-                        ? subscriptionData.payment_method.funding
-                            .charAt(0)
-                            .toUpperCase() +
-                          subscriptionData.payment_method.funding.slice(1)
+                      {paymentMethod.funding
+                        ? paymentMethod.funding.charAt(0).toUpperCase() +
+                          paymentMethod.funding.slice(1)
                         : "Card"}
                     </span>
                   </div>
                 </div>
-              )}
-
-              {/* If no payment method, show a placeholder */}
-              {!subscriptionData?.payment_method && (
+              ) : (
                 <div className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg border border-gray-200">
                   <div className="w-10 h-7 flex items-center justify-center bg-gray-200 rounded">
                     <span className="text-xs text-gray-400">N/A</span>
@@ -603,6 +612,7 @@ export default function Subscription() {
                   </div>
                 </div>
               )}
+
               <div className="pt-4 border-t border-gray-200">
                 <Button variant="outline" className="w-full bg-transparent">
                   Update Payment Method
