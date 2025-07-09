@@ -55,7 +55,7 @@ const plans = [
   {
     id: "monthly",
     name: "Monthly",
-    price: 29,
+    price: 9.99,
     interval: "month",
     description: "Full access with monthly billing",
     features: [
@@ -67,25 +67,25 @@ const plans = [
       "Custom coaching plans",
     ],
     popular: true,
-    stripePriceId: "price_monthly_29",
+    stripePriceId: "price_monthly_999",
   },
   {
     id: "yearly",
     name: "Yearly",
-    price: 290,
+    price: 99.9,
     interval: "year",
     description: "Best value with annual billing",
     features: [
       "Everything in Monthly",
-      "2 months free (save $58)",
+      "2 months free (save $19.9)",
       "Exclusive yearly features",
       "1-on-1 coaching session",
       "Advanced reporting",
       "API access",
     ],
     popular: false,
-    stripePriceId: "price_yearly_290",
-    savings: "Save $58",
+    stripePriceId: "price_yearly_999",
+    savings: "Save $19.9",
   },
 ];
 
@@ -467,7 +467,7 @@ export default function Subscription() {
                   </CardTitle>
                   <div className="mt-2">
                     <span className="text-3xl font-bold text-gray-900">
-                      {plan.price === 0 ? "Free" : `$${plan.price}`}
+                      {`$${plan.price}`}
                     </span>
                     {plan.price > 0 && (
                       <span className="text-gray-500">/{plan.interval}</span>
