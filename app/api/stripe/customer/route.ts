@@ -53,11 +53,8 @@ export async function POST(request: NextRequest) {
     console.log("Creating Stripe customer...");
     const customer = await stripe.customers.create({
       email: user.email!,
-      name: `${profile.first_name} ${profile.last_name}`,
       metadata: {
         user_id: user.id,
-        primary_influence_style: profile.primary_influence_style || "",
-        secondary_influence_style: profile.secondary_influence_style || "",
       },
     });
 
