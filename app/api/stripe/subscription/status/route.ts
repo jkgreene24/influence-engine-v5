@@ -31,9 +31,11 @@ export async function GET(request: NextRequest) {
     // Get subscriptions for this customer
     const subscriptions = await stripe.subscriptions.list({
       customer: profile.stripe_customer_id,
-      status: "all",
+      status: "active",
       limit: 1,
     });
+
+    console.log(subscriptions);
 
     if (subscriptions.data.length === 0) {
       return NextResponse.json({ subscription: null });
