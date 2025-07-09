@@ -236,6 +236,13 @@ export default function Subscription() {
     }
   };
 
+  const getPlanStatus = () => {
+    if (currentPlan.id === "free" && profile?.trial_ended) {
+      return "canceled";
+    }
+    return subscriptionData?.status || "free";
+  };
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp * 1000).toLocaleDateString("en-US", {
       year: "numeric",
@@ -351,12 +358,7 @@ export default function Subscription() {
                   </h3>
                   <p className="text-gray-600">{currentPlan.description}</p>
                   <div className="flex items-center space-x-2 mt-2">
-                    {getStatusBadge(subscriptionData?.status || "free")}
-                    {subscriptionData?.trial_end && (
-                      <Badge className="bg-purple-100 text-purple-800 border-purple-200">
-                        Trial until {formatDate(subscriptionData.trial_end)}
-                      </Badge>
-                    )}
+                    {getStatusBadge(getPlanStatus())}
                   </div>
                 </div>
               </div>
