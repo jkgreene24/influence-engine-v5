@@ -32,6 +32,7 @@ import {
   Upload,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface InfluenceStyle {
   id: string;
@@ -85,6 +86,7 @@ const influenceStyles: InfluenceStyle[] = [
 
 export default function Profile() {
   const supabase = createClient();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [firstName, setFirstName] = useState("");
@@ -259,6 +261,11 @@ export default function Profile() {
     }
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/auth/signin");
+  };
+
   const getUserInitials = () => {
     if (firstName && lastName) {
       return `${firstName[0]}${lastName[0]}`.toUpperCase();
@@ -385,7 +392,13 @@ export default function Profile() {
             <h1 className="text-2xl font-bold text-gray-900">
               Profile Settings
             </h1>
-            <div className="w-24"></div> {/* Spacer */}
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="text-gray-600 border-gray-300 hover:bg-gray-100"
+            >
+              Logout
+            </Button>
           </div>
         </div>
       </div>

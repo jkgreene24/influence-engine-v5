@@ -18,6 +18,7 @@ import {
   Shield,
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 interface SubscriptionData {
   id: string;
@@ -94,6 +95,7 @@ const plans = [
 export default function Subscription() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
+  const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [subscriptionData, setSubscriptionData] =
@@ -296,6 +298,12 @@ export default function Subscription() {
     }
   };
 
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push("/auth/signin");
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
@@ -324,7 +332,13 @@ export default function Subscription() {
               Back to Chat
             </Button>
             <h1 className="text-2xl font-bold text-gray-900">Subscription</h1>
-            <div className="w-24"></div>
+            <Button
+              variant="outline"
+              onClick={handleLogout}
+              className="text-gray-600 border-gray-300 hover:bg-gray-100"
+            >
+              Logout
+            </Button>
           </div>
         </div>
       </div>
