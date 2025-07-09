@@ -1,9 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
 import {
   ArrowLeft,
   Check,
@@ -90,6 +92,8 @@ const plans = [
 ];
 
 export default function Subscription() {
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [subscriptionData, setSubscriptionData] =
@@ -151,6 +155,18 @@ export default function Subscription() {
 
     fetchUserAndData();
   }, []);
+
+  // Show upgrade notification if redirected from middleware
+  useEffect(() => {
+    const upgradeParam = searchParams.get("upgrade");
+    if (upgradeParam === "true") {
+      toast({
+        title: "Trial Ended",
+        description: "Please upgrade your plan to continue using the service.",
+        variant: "destructive",
+      });
+    }
+  }, [searchParams, toast]);
 
   const getUserInitials = () => {
     // First try to get initials from profile data

@@ -46,6 +46,28 @@ export async function middleware(request: NextRequest) {
   const isPaymentRoute = paymentRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isProtectedRoute = isAdminRoute || isUserRoute || isPaymentRoute
 
+  // Restrict admin routes to admins only
+  if (user && isAdminRoute) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single();
+
+      if (!profile?.is_admin) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/chat";
+        return NextResponse.redirect(url);
+      }
+    } catch (error) {
+      console.error("Error checking admin status:", error);
+      const url = request.nextUrl.clone();
+      url.pathname = "/chat";
+      return NextResponse.redirect(url);
+    }
+  }
+
   // If no user and trying to access protected routes, redirect to signin
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
@@ -60,23 +82,41 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // Check if user has completed payment setup for protected routes
-  if (user && (isUserRoute || isAdminRoute)) {
+  // Check trial and subscription status for user routes (not admin routes)
+  if (user && isUserRoute) {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("payment_method_added")
+        .select("subscription_status, trial_ended, is_admin, payment_method_added")
         .eq("user_id", user.id)
         .single()
 
-      // If user hasn't added payment method and trying to access user routes, redirect to payment setup
-      if (!profile?.payment_method_added && isUserRoute) {
+      // Skip trial/subscription checks for admin users
+      if (profile?.is_admin) {
+        return supabaseResponse
+      }
+
+      // If user hasn't added payment method, redirect to payment setup
+      if (!profile?.payment_method_added) {
         const url = request.nextUrl.clone()
         url.pathname = "/payment-setup"
         return NextResponse.redirect(url)
       }
+
+      // Trial and subscription logic
+      if (
+        !profile?.subscription_status &&
+        profile?.trial_ended &&
+        !request.nextUrl.pathname.startsWith("/subscription")
+      ) {
+        // Only redirect if NOT already on the subscription page
+        const url = request.nextUrl.clone()
+        url.pathname = "/subscription"
+        url.searchParams.set("upgrade", "true")
+        return NextResponse.redirect(url)
+      }
     } catch (error) {
-      console.error("Error checking payment setup:", error)
+      console.error("Error checking trial/subscription status:", error)
     }
   }
 
