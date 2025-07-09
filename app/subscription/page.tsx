@@ -613,11 +613,11 @@ export default function Subscription() {
                 </div>
               )}
 
-              <div className="pt-4 border-t border-gray-200">
+              {/* <div className="pt-4 border-t border-gray-200">
                 <Button variant="outline" className="w-full bg-transparent">
                   Update Payment Method
                 </Button>
-              </div>
+              </div> */}
             </div>
           </CardContent>
         </Card>
