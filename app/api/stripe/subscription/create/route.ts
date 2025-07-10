@@ -46,62 +46,173 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create subscription with allow_incomplete behavior
-    const subscription = await stripe.subscriptions.create({
+    // Check for existing active subscription
+    const existingSubscriptions = await stripe.subscriptions.list({
       customer: profile.stripe_customer_id,
-      items: [{ price: priceId }],
-      default_payment_method: profile.payment_method_id,
-      payment_behavior: "allow_incomplete",
-      payment_settings: { save_default_payment_method: "on_subscription" },
-      expand: ["latest_invoice.payment_intent"], // Add this line
+      status: "active",
+      limit: 1,
     });
 
-    // Return different responses based on subscription status
-    if (subscription.status === "active") {
-      // Update database when subscription is active
-      const { data: updatedProfile } = await supabase
-      .from("profiles")
-      .update({
-        subscription_status: true,
-        trial_ended: true,
-      })
-      .eq("user_id", user.id)
-      .select()
-      .single();
+    const existingSubscription = existingSubscriptions.data[0];
 
-      return NextResponse.json({
-        success: true,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        message: "Subscription activated successfully!",
-        profile: {
-          subscription_status: updatedProfile?.subscription_status,
-          trial_ended: updatedProfile?.trial_ended,
-        },
-      });
-    } else if (subscription.status === "incomplete") {
-      return NextResponse.json({
-        success: false,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        message: "Payment failed. Please check your payment method and try again.",
-        requiresAction: true,
-        clientSecret: ((subscription.latest_invoice as Stripe.Invoice)?.payment_intent as Stripe.PaymentIntent)?.client_secret,
-      });
-    } else if (subscription.status === "past_due") {
-      return NextResponse.json({
-        success: false,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        message: "Payment is past due. Please update your payment method.",
-      });
+    if (existingSubscription) {
+      // Update the subscription's items to the new price
+      const updatedSubscription = await stripe.subscriptions.update(
+        existingSubscription.id,
+        {
+          items: [
+            {
+              id: existingSubscription.items.data[0].id,
+              price: priceId,
+            },
+          ],
+          default_payment_method: profile.payment_method_id,
+          payment_behavior: "allow_incomplete",
+          payment_settings: { save_default_payment_method: "on_subscription" },
+          expand: ["latest_invoice.payment_intent"],
+        }
+      );
+      // Return different responses based on subscription status
+      if (updatedSubscription.status === "active") {
+        // Update database when subscription is active
+        const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({
+          subscription_status: true,
+          trial_ended: true,
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+        return NextResponse.json({
+          success: true,
+          subscriptionId: updatedSubscription.id,
+          status: updatedSubscription.status,
+          message: "Subscription activated successfully!",
+          profile: {
+            subscription_status: updatedProfile?.subscription_status,
+            trial_ended: updatedProfile?.trial_ended,
+          },
+        });
+      } else if (updatedSubscription.status === "incomplete") {
+        // Update database when subscription is incomplete
+        const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({
+          subscription_status: false,
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+        return NextResponse.json({
+          success: false,
+          subscriptionId: updatedSubscription.id,
+          status: updatedSubscription.status,
+          message: "Payment failed. Please check your payment method and try again.",
+          profile: {
+            subscription_status: updatedProfile?.subscription_status,
+          },
+          requiresAction: true,
+          clientSecret: ((updatedSubscription.latest_invoice as Stripe.Invoice)?.payment_intent as Stripe.PaymentIntent)?.client_secret,
+        });
+      } else if (updatedSubscription.status === "past_due") {
+        // Update database when subscription is past due
+        const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({
+          subscription_status: false,
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+        return NextResponse.json({
+          success: false,
+          subscriptionId: updatedSubscription.id,
+          status: updatedSubscription.status,
+          message: "Payment is past due. Please update your payment method.",
+          profile: {
+            subscription_status: updatedProfile?.subscription_status,
+          },
+        });
+      } else {
+        // Update database when subscription fails
+        const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({
+          subscription_status: false,
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+        return NextResponse.json({
+          success: false,
+          subscriptionId: updatedSubscription.id,
+          status: updatedSubscription.status,
+          message: "Subscription created but payment requires additional action.",
+          profile: {
+            subscription_status: updatedProfile?.subscription_status,
+          },
+        });
+      }
     } else {
-      return NextResponse.json({
-        success: false,
-        subscriptionId: subscription.id,
-        status: subscription.status,
-        message: "Subscription created but payment requires additional action.",
+      // Create subscription with allow_incomplete behavior
+      const subscription = await stripe.subscriptions.create({
+        customer: profile.stripe_customer_id,
+        items: [{ price: priceId }],
+        default_payment_method: profile.payment_method_id,
+        payment_behavior: "allow_incomplete",
+        payment_settings: { save_default_payment_method: "on_subscription" },
+        expand: ["latest_invoice.payment_intent"], // Add this line
       });
+
+      // Return different responses based on subscription status
+      if (subscription.status === "active") {
+        // Update database when subscription is active
+        const { data: updatedProfile } = await supabase
+        .from("profiles")
+        .update({
+          subscription_status: true,
+          trial_ended: true,
+        })
+        .eq("user_id", user.id)
+        .select()
+        .single();
+
+        return NextResponse.json({
+          success: true,
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          message: "Subscription activated successfully!",
+          profile: {
+            subscription_status: updatedProfile?.subscription_status,
+            trial_ended: updatedProfile?.trial_ended,
+          },
+        });
+      } else if (subscription.status === "incomplete") {
+        return NextResponse.json({
+          success: false,
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          message: "Payment failed. Please check your payment method and try again.",
+          requiresAction: true,
+          clientSecret: ((subscription.latest_invoice as Stripe.Invoice)?.payment_intent as Stripe.PaymentIntent)?.client_secret,
+        });
+      } else if (subscription.status === "past_due") {
+        return NextResponse.json({
+          success: false,
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          message: "Payment is past due. Please update your payment method.",
+        });
+      } else {
+        return NextResponse.json({
+          success: false,
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          message: "Subscription created but payment requires additional action.",
+        });
+      }
     }
   } catch (error) {
     console.error("Error creating subscription:", error);
