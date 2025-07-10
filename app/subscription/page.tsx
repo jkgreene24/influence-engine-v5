@@ -70,7 +70,7 @@ const plans = [
       "Custom coaching plans",
     ],
     popular: true,
-    stripePriceId: "price_monthly_999",
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_MONTHLY_PRICE_ID,
   },
   {
     id: "yearly",
@@ -87,7 +87,7 @@ const plans = [
       "API access",
     ],
     popular: false,
-    stripePriceId: "price_yearly_999",
+    stripePriceId: process.env.NEXT_PUBLIC_STRIPE_YEARLY_PRICE_ID,
     savings: "Save $19.9",
   },
 ];
@@ -103,58 +103,56 @@ export default function Subscription() {
   const [paymentMethod, setPaymentMethod] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [upgradingPlanId, setUpgradingPlanId] = useState<string | null>(null);
+  const fetchUserAndData = async () => {
+    try {
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      if (user) {
+        setUser(user);
+
+        // Fetch profile data
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+        if (profileData) {
+          setProfile(profileData);
+        }
+
+        // Fetch subscription status from Stripe
+        const subscriptionResponse = await fetch(
+          "/api/stripe/subscription/status"
+        );
+        if (subscriptionResponse.ok) {
+          const data = await subscriptionResponse.json();
+          setSubscriptionData(data.subscription);
+        } else {
+          console.error("Failed to fetch subscription data");
+        }
+
+        // Fetch payment method details from Stripe
+        const paymentMethodResponse = await fetch("/api/stripe/payment-method");
+        if (paymentMethodResponse.ok) {
+          const data = await paymentMethodResponse.json();
+          setPaymentMethod(data.payment_method);
+        } else {
+          console.error("Failed to fetch payment method data");
+        }
+      }
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setError("Failed to load subscription information");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchUserAndData = async () => {
-      try {
-        const supabase = createClient();
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
-
-        if (user) {
-          setUser(user);
-
-          // Fetch profile data
-          const { data: profileData } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", user.id)
-            .single();
-          if (profileData) {
-            setProfile(profileData);
-          }
-
-          // Fetch subscription status from Stripe
-          const subscriptionResponse = await fetch(
-            "/api/stripe/subscription/status"
-          );
-          if (subscriptionResponse.ok) {
-            const data = await subscriptionResponse.json();
-            setSubscriptionData(data.subscription);
-          } else {
-            console.error("Failed to fetch subscription data");
-          }
-
-          // Fetch payment method details from Stripe
-          const paymentMethodResponse = await fetch(
-            "/api/stripe/payment-method"
-          );
-          if (paymentMethodResponse.ok) {
-            const data = await paymentMethodResponse.json();
-            setPaymentMethod(data.payment_method);
-          } else {
-            console.error("Failed to fetch payment method data");
-          }
-        }
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setError("Failed to load subscription information");
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchUserAndData();
   }, []);
 
@@ -274,6 +272,7 @@ export default function Subscription() {
 
   const handleSubscribe = async (planId: string) => {
     if (planId === "free") return;
+    setUpgradingPlanId(planId); // Start spinner
 
     try {
       const plan = plans.find((p) => p.id === planId);
@@ -290,11 +289,38 @@ export default function Subscription() {
       });
 
       const data = await response.json();
-      if (data.url) {
-        window.location.href = data.url;
+
+      if (response.ok) {
+        if (data.success) {
+          await fetchUserAndData();
+
+          toast({
+            title: "Success!",
+            description: data.message,
+          });
+        } else {
+          toast({
+            title: "Payment Issue",
+            description: data.message,
+            variant: "destructive",
+          });
+        }
+      } else {
+        toast({
+          title: "Error",
+          description: data.error || "Failed to create subscription",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error creating subscription:", error);
+      toast({
+        title: "Error",
+        description: "Failed to create subscription. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setUpgradingPlanId(null); // Stop spinner
     }
   };
 
@@ -397,7 +423,10 @@ export default function Subscription() {
                     <div>
                       <p className="text-sm text-gray-500">Subscription ID</p>
                       <p className="font-medium text-gray-900">
-                        {subscriptionData.id.slice(-8)}
+                        {subscriptionData?.id &&
+                        typeof subscriptionData.id === "string"
+                          ? subscriptionData.id.slice(-8)
+                          : "N/A"}
                       </p>
                     </div>
                   </div>
@@ -522,22 +551,29 @@ export default function Subscription() {
 
                   <Button
                     onClick={() => handleSubscribe(plan.id)}
-                    disabled={currentPlan.id === plan.id}
+                    disabled={
+                      currentPlan.id === plan.id ||
+                      upgradingPlanId !== null ||
+                      (plan.id === "free" && profile?.trial_ended)
+                    }
                     className={`w-full ${
                       plan.popular
                         ? "bg-[#92278F] hover:bg-[#7a1f78] text-white"
                         : "bg-gray-100 hover:bg-gray-200 text-gray-900"
                     } ${
-                      currentPlan.id === plan.id
+                      currentPlan.id === plan.id || upgradingPlanId !== null
                         ? "opacity-50 cursor-not-allowed"
                         : ""
                     }`}
                   >
-                    {currentPlan.id === plan.id
+                    {upgradingPlanId === plan.id ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin inline" />
+                    ) : null}
+                    {plan.id === "free" && profile?.trial_ended
+                      ? "Trial Ended"
+                      : currentPlan.id === plan.id
                       ? "Current Plan"
-                      : plan.price === 0
-                      ? "Current Plan"
-                      : "Upgrade"}
+                      : "Choose Plan"}
                   </Button>
                 </CardContent>
               </Card>
