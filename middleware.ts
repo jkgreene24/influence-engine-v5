@@ -67,6 +67,12 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url);
     }
   }
+  // Redirect quiz to chat
+  if (user && request.nextUrl.pathname.startsWith("/quiz")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/chat";
+    return NextResponse.redirect(url);
+  }
 
   // If no user and trying to access protected routes, redirect to signin
   if (!user && isProtectedRoute) {
