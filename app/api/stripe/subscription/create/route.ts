@@ -94,6 +94,12 @@ export async function POST(request: NextRequest) {
             subscription_status: updatedProfile?.subscription_status,
             trial_ended: updatedProfile?.trial_ended,
           },
+          current_period_end: updatedSubscription.current_period_end,
+          current_period_start: updatedSubscription.current_period_start,
+          amount: updatedSubscription.items.data[0].price.unit_amount,
+          currency: updatedSubscription.items.data[0].price.currency,
+          interval: updatedSubscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: updatedSubscription.cancel_at_period_end,
         });
       } else if (updatedSubscription.status === "incomplete") {
         // Update database when subscription is incomplete
@@ -115,6 +121,12 @@ export async function POST(request: NextRequest) {
           },
           requiresAction: true,
           clientSecret: ((updatedSubscription.latest_invoice as Stripe.Invoice)?.payment_intent as Stripe.PaymentIntent)?.client_secret,
+          current_period_end: updatedSubscription.current_period_end,
+          current_period_start: updatedSubscription.current_period_start,
+          amount: updatedSubscription.items.data[0].price.unit_amount,
+          currency: updatedSubscription.items.data[0].price.currency,
+          interval: updatedSubscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: updatedSubscription.cancel_at_period_end,
         });
       } else if (updatedSubscription.status === "past_due") {
         // Update database when subscription is past due
@@ -134,6 +146,12 @@ export async function POST(request: NextRequest) {
           profile: {
             subscription_status: updatedProfile?.subscription_status,
           },
+          current_period_end: updatedSubscription.current_period_end,
+          current_period_start: updatedSubscription.current_period_start,
+          amount: updatedSubscription.items.data[0].price.unit_amount,
+          currency: updatedSubscription.items.data[0].price.currency,
+          interval: updatedSubscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: updatedSubscription.cancel_at_period_end,
         });
       } else {
         // Update database when subscription fails
@@ -153,6 +171,12 @@ export async function POST(request: NextRequest) {
           profile: {
             subscription_status: updatedProfile?.subscription_status,
           },
+          current_period_end: updatedSubscription.current_period_end,
+          current_period_start: updatedSubscription.current_period_start,
+          amount: updatedSubscription.items.data[0].price.unit_amount,
+          currency: updatedSubscription.items.data[0].price.currency,
+          interval: updatedSubscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: updatedSubscription.cancel_at_period_end,
         });
       }
     } else {
@@ -188,6 +212,12 @@ export async function POST(request: NextRequest) {
             subscription_status: updatedProfile?.subscription_status,
             trial_ended: updatedProfile?.trial_ended,
           },
+          current_period_end: subscription.current_period_end,
+          current_period_start: subscription.current_period_start,
+          amount: subscription.items.data[0].price.unit_amount,
+          currency: subscription.items.data[0].price.currency,
+          interval: subscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: subscription.cancel_at_period_end,
         });
       } else if (subscription.status === "incomplete") {
         return NextResponse.json({
@@ -197,6 +227,12 @@ export async function POST(request: NextRequest) {
           message: "Payment failed. Please check your payment method and try again.",
           requiresAction: true,
           clientSecret: ((subscription.latest_invoice as Stripe.Invoice)?.payment_intent as Stripe.PaymentIntent)?.client_secret,
+          current_period_end: subscription.current_period_end,
+          current_period_start: subscription.current_period_start,
+          amount: subscription.items.data[0].price.unit_amount,
+          currency: subscription.items.data[0].price.currency,
+          interval: subscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: subscription.cancel_at_period_end,
         });
       } else if (subscription.status === "past_due") {
         return NextResponse.json({
@@ -204,6 +240,12 @@ export async function POST(request: NextRequest) {
           subscriptionId: subscription.id,
           status: subscription.status,
           message: "Payment is past due. Please update your payment method.",
+          current_period_end: subscription.current_period_end,
+          current_period_start: subscription.current_period_start,
+          amount: subscription.items.data[0].price.unit_amount,
+          currency: subscription.items.data[0].price.currency,
+          interval: subscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: subscription.cancel_at_period_end,
         });
       } else {
         return NextResponse.json({
@@ -211,6 +253,12 @@ export async function POST(request: NextRequest) {
           subscriptionId: subscription.id,
           status: subscription.status,
           message: "Subscription created but payment requires additional action.",
+          current_period_end: subscription.current_period_end,
+          current_period_start: subscription.current_period_start,
+          amount: subscription.items.data[0].price.unit_amount,
+          currency: subscription.items.data[0].price.currency,
+          interval: subscription.items.data[0].price.recurring?.interval,
+          cancel_at_period_end: subscription.cancel_at_period_end,
         });
       }
     }

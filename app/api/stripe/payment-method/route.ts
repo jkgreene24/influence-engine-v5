@@ -28,20 +28,22 @@ export async function GET(request: NextRequest) {
     }
 
     // Fetch payment method details from Stripe
-    const paymentMethod = await stripe.paymentMethods.retrieve(
-      profile.payment_method_id
-    );
+    const paymentMethod = await supabase
+      .from("payment_methods")
+      .select("*")
+      .eq("stripe_payment_method_id", profile.payment_method_id)
+      .single();
 
-    if (!paymentMethod.card) {
+    if (!paymentMethod.data) {
       return NextResponse.json({ payment_method: null });
     }
 
     const paymentMethodData = {
-      brand: paymentMethod.card.brand,
-      last4: paymentMethod.card.last4,
-      exp_month: paymentMethod.card.exp_month,
-      exp_year: paymentMethod.card.exp_year,
-      funding: paymentMethod.card.funding,
+      brand: paymentMethod.data.card_brand,
+      last4: paymentMethod.data.card_last4,
+      exp_month: paymentMethod.data.card_exp_month,
+      exp_year: paymentMethod.data.card_exp_year,
+      funding: paymentMethod.data.card_funding,
     };
 
     return NextResponse.json({ payment_method: paymentMethodData });

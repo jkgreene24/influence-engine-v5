@@ -21,22 +21,14 @@ import { createClient } from "@/lib/supabase/client";
 import { useRouter } from "next/navigation";
 
 interface SubscriptionData {
-  id: string;
+  subscription_id: string;
   status: string;
   current_period_end: number;
   current_period_start: number;
   amount: number;
   currency: string;
   interval: string;
-  trial_end?: number;
   cancel_at_period_end: boolean;
-  payment_method?: {
-    brand: string;
-    last4: string;
-    exp_month: number;
-    exp_year: number;
-    funding?: string;
-  };
 }
 
 const plans = [
@@ -292,7 +284,22 @@ export default function Subscription() {
 
       if (response.ok) {
         if (data.success) {
-          await fetchUserAndData();
+          console.log("Subscription data:", data);
+          setProfile({
+            ...profile,
+            trial_ended: true,
+            subscription_status: true,
+          });
+          setSubscriptionData({
+            subscription_id: data.subscriptionId,
+            status: data.status,
+            current_period_end: data.current_period_end,
+            current_period_start: data.current_period_start,
+            amount: data.amount,
+            currency: data.currency,
+            interval: data.interval,
+            cancel_at_period_end: data.cancel_at_period_end,
+          });
 
           toast({
             title: "Success!",
@@ -423,9 +430,9 @@ export default function Subscription() {
                     <div>
                       <p className="text-sm text-gray-500">Subscription ID</p>
                       <p className="font-medium text-gray-900">
-                        {subscriptionData?.id &&
-                        typeof subscriptionData.id === "string"
-                          ? subscriptionData.id.slice(-8)
+                        {subscriptionData?.subscription_id &&
+                        typeof subscriptionData.subscription_id === "string"
+                          ? subscriptionData.subscription_id.slice(-8)
                           : "N/A"}
                       </p>
                     </div>
@@ -455,15 +462,14 @@ export default function Subscription() {
                     </div>
                   </div>
 
-                  {subscriptionData.payment_method && (
+                  {paymentMethod && (
                     <div className="flex items-center space-x-3">
                       <CreditCard className="w-5 h-5 text-gray-400" />
                       <div>
                         <p className="text-sm text-gray-500">Payment Method</p>
                         <p className="font-medium text-gray-900">
-                          {subscriptionData.payment_method.brand.toUpperCase()}{" "}
-                          ****
-                          {subscriptionData.payment_method.last4}
+                          {paymentMethod.brand.toUpperCase()} ****
+                          {paymentMethod.last4}
                         </p>
                       </div>
                     </div>

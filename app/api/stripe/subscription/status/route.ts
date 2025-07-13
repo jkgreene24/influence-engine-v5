@@ -1,8 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import Stripe from "stripe";
-
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!);
 
 export async function GET(request: NextRequest) {
   try {
@@ -27,49 +24,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ subscription: null });
     }
 
-    // Get subscriptions for this customer
-    const subscriptions = await stripe.subscriptions.list({
-      customer: profile.stripe_customer_id,
-      status: "active",
-      limit: 1,
-    });
+    const { data: subscriptionData } = await supabase
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
 
-    console.log(subscriptions);
-
-    if (subscriptions.data.length === 0) {
+    if (!subscriptionData) {
       return NextResponse.json({ subscription: null });
     }
-
-    const subscription = subscriptions.data[0] as Stripe.Subscription;
-
-    // Get payment method details
-    let paymentMethod = null;
-    if (subscription.default_payment_method) {
-      const pm = await stripe.paymentMethods.retrieve(
-        subscription.default_payment_method as string
-      );
-      if (pm.card) {
-        paymentMethod = {
-          brand: pm.card.brand,
-          last4: pm.card.last4,
-          exp_month: pm.card.exp_month,
-          exp_year: pm.card.exp_year,
-        };
-      }
-    }
-
-    const subscriptionData = {
-      id: subscription.id,
-      status: subscription.status,
-      current_period_start: subscription.current_period_start,
-      current_period_end: subscription.current_period_end,
-      amount: subscription.items.data[0]?.price.unit_amount || 0,
-      currency: subscription.items.data[0]?.price.currency || "usd",
-      interval: subscription.items.data[0]?.price.recurring?.interval || "month",
-      trial_end: subscription.trial_end,
-      cancel_at_period_end: subscription.cancel_at_period_end,
-      payment_method: paymentMethod,
-    };
 
     return NextResponse.json({ subscription: subscriptionData });
   } catch (error) {
