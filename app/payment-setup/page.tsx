@@ -45,7 +45,7 @@ function PaymentSetupForm({ clientSecret, onSuccess }: PaymentSetupFormProps) {
     });
 
     if (submitError) {
-      setError(submitError.message || "Payment failed");
+      setError(submitError.message || "Payment Setup Failed");
       setLoading(false);
     } else {
       onSuccess();
