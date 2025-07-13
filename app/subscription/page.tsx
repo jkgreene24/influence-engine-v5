@@ -235,12 +235,38 @@ export default function Subscription() {
     return subscriptionData?.status || "free";
   };
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    });
+  const formatDate = (timestamp: string | number) => {
+    console.log("Timestamp:", timestamp);
+    // Handle both Unix timestamps (numbers) and ISO date strings
+    if (!timestamp) {
+      return "N/A";
+    }
+
+    try {
+      let date: Date;
+
+      if (typeof timestamp === "number") {
+        // Unix timestamp (seconds to milliseconds)
+        date = new Date(timestamp * 1000);
+      } else {
+        // ISO date string
+        date = new Date(timestamp);
+      }
+
+      // Check if the date is valid
+      if (isNaN(date.getTime())) {
+        return "Invalid Date";
+      }
+
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      });
+    } catch (error) {
+      console.error("Error formatting date:", error, "timestamp:", timestamp);
+      return "Invalid Date";
+    }
   };
 
   const formatAmount = (amount: number, currency: string) => {
