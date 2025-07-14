@@ -17,12 +17,15 @@ import {
   Settings,
   Plus,
 } from "lucide-react";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ChatUser {
-  id: string;
-  name: string;
-  influenceStyle: string; // Changed from union to string for blended styles
-  avatar: string;
+  user_id: string;
+  first_name: string;
+  last_name: string;
+  primary_influence_style: string;
+  secondary_influence_style: string;
+  avatar_url: string;
   status: "online" | "offline" | "away";
   color: string;
 }
@@ -124,9 +127,9 @@ export default function AdminChatInterface() {
     // Only show the current user's chat history
     const userHistory: ChatHistory[] = [
       {
-        id: currentUser.id,
-        userName: currentUser.name,
-        userAvatar: currentUser.avatar,
+        id: currentUser.user_id,
+        userName: `${currentUser.first_name} ${currentUser.last_name}`,
+        userAvatar: currentUser.avatar_url,
         userColor: currentUser.color,
         lastMessage: "Hello Admin! I'm monitoring the conversation...",
         timestamp: new Date(),
@@ -145,7 +148,10 @@ export default function AdminChatInterface() {
       content: input,
       sender: currentSender,
       timestamp: new Date(),
-      displayName: currentSender === "user" ? selectedUser.name : "Admin",
+      displayName:
+        currentSender === "user"
+          ? `${selectedUser.first_name} ${selectedUser.last_name}`
+          : "Admin",
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -154,7 +160,7 @@ export default function AdminChatInterface() {
     // Update chat history
     setChatHistory((prev) =>
       prev.map((chat) =>
-        chat.id === selectedUser.id
+        chat.id === selectedUser.user_id
           ? { ...chat, lastMessage: input, timestamp: new Date() }
           : chat
       )
@@ -181,7 +187,7 @@ export default function AdminChatInterface() {
       // Update chat history with AI response
       setChatHistory((prev) =>
         prev.map((chat) =>
-          chat.id === selectedUser.id
+          chat.id === selectedUser.user_id
             ? {
                 ...chat,
                 lastMessage: "AI responded to your message",
@@ -232,6 +238,12 @@ export default function AdminChatInterface() {
         return "bg-gray-100 text-black";
     }
   };
+  const getUserInitials = (user: ChatUser) => {
+    if (user.first_name && user.last_name) {
+      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
+    }
+    return "U";
+  };
 
   const getAvatarForSender = (sender: string) => {
     switch (sender) {
@@ -246,7 +258,15 @@ export default function AdminChatInterface() {
           <div
             className={`w-8 h-8 rounded-full ${selectedUser.color} flex items-center justify-center flex-shrink-0 text-white font-bold text-xs`}
           >
-            {selectedUser.avatar}
+            <Avatar className="h-12 w-12 transition-all duration-200 group-hover:brightness-75">
+              <AvatarImage
+                src={selectedUser.avatar_url}
+                alt={`${selectedUser.first_name} ${selectedUser.last_name}`}
+              />
+              <AvatarFallback className="bg-[#92278F] text-white text-2xl font-bold">
+                {getUserInitials(selectedUser)}
+              </AvatarFallback>
+            </Avatar>
           </div>
         ) : (
           <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
@@ -357,7 +377,15 @@ export default function AdminChatInterface() {
             <div
               className={`w-12 h-12 rounded-full ${selectedUser.color} flex items-center justify-center text-white font-bold font-inter relative`}
             >
-              {selectedUser.avatar}
+              <Avatar className="h-12 w-12 transition-all duration-200 group-hover:brightness-75">
+                <AvatarImage
+                  src={selectedUser.avatar_url}
+                  alt={`${selectedUser.first_name} ${selectedUser.last_name}`}
+                />
+                <AvatarFallback className="bg-[#92278F] text-white text-2xl font-bold">
+                  {getUserInitials(selectedUser)}
+                </AvatarFallback>
+              </Avatar>
               <div
                 className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                   selectedUser.status === "online"
@@ -370,16 +398,22 @@ export default function AdminChatInterface() {
             </div>
             <div>
               <h1 className="font-playfair text-2xl font-bold">
-                Admin Monitoring: {selectedUser.name}
+                Admin Monitoring: {selectedUser.first_name}{" "}
+                {selectedUser.last_name}
               </h1>
               <div className="flex items-center space-x-2 mt-1">
                 <div className="text-white/80">
-                  {getInfluenceIcon(selectedUser.influenceStyle)}
+                  {getInfluenceIcon(
+                    selectedUser.primary_influence_style +
+                      (selectedUser.secondary_influence_style
+                        ? "-" + selectedUser.secondary_influence_style
+                        : "")
+                  )}
                 </div>
                 {/* Show name only for single styles */}
-                {!selectedUser.influenceStyle.includes("-") && (
+                {!selectedUser.primary_influence_style.includes("-") && (
                   <span className="font-inter text-sm text-white/90 capitalize">
-                    {selectedUser.influenceStyle}
+                    {selectedUser.primary_influence_style}
                   </span>
                 )}
               </div>
@@ -489,7 +523,9 @@ export default function AdminChatInterface() {
                 }`}
               >
                 <User className="w-4 h-4" />
-                <span>Send as {selectedUser.name}</span>
+                <span>
+                  Send as {selectedUser.first_name} {selectedUser.last_name}
+                </span>
               </Button>
             </div>
 
@@ -501,7 +537,7 @@ export default function AdminChatInterface() {
                 placeholder={
                   currentSender === "admin"
                     ? "Enter admin feedback..."
-                    : `Message as ${selectedUser.name}...`
+                    : `Message as ${selectedUser.first_name} ${selectedUser.last_name}...`
                 }
                 className="flex-1 font-inter border-gray-300 focus:border-[#92278F] focus:ring-[#92278F] h-12"
               />
@@ -518,7 +554,7 @@ export default function AdminChatInterface() {
             <p className="text-xs text-gray-500 font-inter text-center">
               {currentSender === "admin"
                 ? "Admin feedback helps guide the AI's behavior and responses"
-                : `User messages are sent as if ${selectedUser.name} is speaking`}
+                : `User messages are sent as if ${selectedUser.first_name} ${selectedUser.last_name} is speaking`}
             </p>
           </div>
         </div>
