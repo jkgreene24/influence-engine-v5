@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { useRouter } from "next/navigation";
 import {
   Search,
   MessageCircle,
@@ -172,6 +173,8 @@ export default function AdminDashboard() {
   const [fineTuningDataType, setFineTuningDataType] = useState<
     "message" | "text" | "json"
   >("message");
+
+  const router = useRouter();
 
   // Enhanced search function that supports multiple terms
   const matchesSearchTerms = (user: User, searchTerms: string[]): boolean => {
@@ -341,11 +344,11 @@ The system uses advanced machine learning algorithms trained on decades of meteo
       })
     );
     // Navigate to admin chat interface
-    window.location.href = "/admin/chat";
+    router.push("/admin/chat");
   };
 
   const handleGoToHome = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   const handleSaveSettings = async () => {

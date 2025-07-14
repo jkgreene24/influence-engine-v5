@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CreditCard, Lock, AlertCircle, Loader2, Shield } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 import {
   Elements,
   PaymentElement,
@@ -90,6 +91,7 @@ export default function PaymentSetup() {
   const [error, setError] = useState<string | null>(null);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const initializePayment = async () => {
@@ -182,7 +184,7 @@ export default function PaymentSetup() {
 
   const handleSuccess = () => {
     // Redirect to chat or dashboard
-    window.location.href = "/chat";
+    router.push("/chat");
   };
 
   if (loading) {

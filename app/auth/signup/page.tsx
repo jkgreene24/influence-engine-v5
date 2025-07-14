@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface InfluenceStyle {
   id: string;
@@ -85,6 +86,7 @@ export default function SignUp() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const supabase = createClient();
+  const router = useRouter();
 
   const searchParams = useSearchParams();
   const primaryStyle = searchParams.get("primary_style") || "";
@@ -239,7 +241,7 @@ export default function SignUp() {
                 <div className="mb-4">{getInfluenceStyleDisplay()}</div>
               )}
               <Button
-                onClick={() => (window.location.href = "/")}
+                onClick={() => router.push("/")}
                 className="bg-[#92278F] hover:bg-[#7a1f78]"
               >
                 Back to Home
@@ -258,7 +260,7 @@ export default function SignUp() {
         <div className="text-center">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "/")}
+            onClick={() => router.push("/")}
             className="mb-6 text-gray-600 hover:text-[#92278F]"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
@@ -454,7 +456,7 @@ export default function SignUp() {
                 Already have an account?{" "}
                 <Button
                   variant="link"
-                  onClick={() => (window.location.href = "/auth/signin")}
+                  onClick={() => router.push("/auth/signin")}
                   className="text-[#92278F] hover:text-[#7a1f78] p-0 h-auto"
                 >
                   Sign in

@@ -4,6 +4,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import {
   Send,
   Bot,
@@ -93,6 +94,7 @@ const getInfluenceIcon = (style: string) => {
 
 export default function ChatInterface() {
   const supabase = createClient();
+  const router = useRouter();
   const [currentUser] = useState<ChatUser>({
     id: "user-1",
     name: "You",
@@ -237,7 +239,7 @@ export default function ChatInterface() {
   };
 
   const handleBackToHome = () => {
-    window.location.href = "/";
+    router.push("/");
   };
 
   const getMessageColor = (sender: string) => {
@@ -430,15 +432,11 @@ export default function ChatInterface() {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem
-                  onClick={() => (window.location.href = "/profile")}
-                >
+                <DropdownMenuItem onClick={() => router.push("/profile")}>
                   <SettingsIcon className="mr-2 h-4 w-4" />
                   <span>Profile</span>
                 </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={() => (window.location.href = "/subscription")}
-                >
+                <DropdownMenuItem onClick={() => router.push("/subscription")}>
                   <CreditCard className="mr-2 h-4 w-4" />
                   <span>Subscription</span>
                 </DropdownMenuItem>

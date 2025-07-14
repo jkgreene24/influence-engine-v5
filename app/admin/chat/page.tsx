@@ -4,6 +4,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 import {
   Send,
   Bot,
@@ -89,6 +90,7 @@ export default function AdminChatInterface() {
   const [currentSender, setCurrentSender] = useState<"admin" | "user">("user");
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const [globalSystemInstruction, setGlobalSystemInstruction] = useState("");
+  const router = useRouter();
 
   useEffect(() => {
     // Get user data from localStorage
@@ -221,7 +223,7 @@ export default function AdminChatInterface() {
 
   const handleBackToDashboard = () => {
     localStorage.removeItem("selectedUser");
-    window.location.href = "/admin";
+    router.push("/admin");
   };
 
   const getMessageColor = (sender: string) => {

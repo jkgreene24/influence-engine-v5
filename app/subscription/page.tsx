@@ -360,7 +360,8 @@ export default function Subscription() {
   const handleLogout = async () => {
     const supabase = createClient();
     await supabase.auth.signOut();
-    router.push("/auth/signin");
+    // Use full page reload for logout to clear all state
+    window.location.href = "/auth/signin";
   };
 
   if (loading) {
@@ -384,7 +385,7 @@ export default function Subscription() {
           <div className="flex items-center justify-between">
             <Button
               variant="ghost"
-              onClick={() => (window.location.href = "/chat")}
+              onClick={() => router.push("/chat")}
               className="text-gray-600 hover:text-[#92278F]"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />

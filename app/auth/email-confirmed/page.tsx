@@ -6,9 +6,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle, XCircle, Home, CreditCard } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function EmailConfirmed() {
   const searchParams = useSearchParams();
+  const router = useRouter();
   const error = searchParams.get("error");
   const errorDescription = searchParams.get("error_description");
   const [profile, setProfile] = useState<any>(null);
@@ -92,14 +94,14 @@ export default function EmailConfirmed() {
 
                 {profile?.payment_method_added ? (
                   <Button
-                    onClick={() => (window.location.href = "/chat")}
+                    onClick={() => router.push("/chat")}
                     className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
                   >
                     Go to Chat
                   </Button>
                 ) : (
                   <Button
-                    onClick={() => (window.location.href = "/payment-setup")}
+                    onClick={() => router.push("/payment-setup")}
                     className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
                   >
                     <CreditCard className="w-4 h-4 mr-2" />
@@ -120,7 +122,7 @@ export default function EmailConfirmed() {
                     "The confirmation link is invalid or has expired. Please try again or request a new confirmation email."}
                 </p>
                 <Button
-                  onClick={() => (window.location.href = "/")}
+                  onClick={() => router.push("/")}
                   className="w-full bg-[#92278F] hover:bg-[#7a1f78] text-white"
                 >
                   <Home className="w-4 h-4 mr-2" />
