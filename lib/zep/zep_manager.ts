@@ -44,7 +44,7 @@ class ZepManager {
 
             // If user exists, update them
             if (user) {
-                // await this.updateUser(userId, email, firstName, lastName, metadata);
+                await this.updateUser(userId, email, firstName, lastName, metadata);
                 console.log(`Updated Zep user: ${userId}`);
             }
         } catch (error: any) {
