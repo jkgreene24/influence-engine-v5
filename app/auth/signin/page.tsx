@@ -67,6 +67,20 @@ export default function SignIn() {
       } else {
         // Redirect to dashboard or chat
         const profile = await upsertUserProfile(data.user);
+        const zepResponse = await fetch("/api/zep/user", {
+          method: "POST",
+          body: JSON.stringify({
+            userId: data.user?.id,
+            email: email,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            metadata: {
+              primary_influence_style: profile?.primary_influence_style,
+              secondary_influence_style: profile?.secondary_influence_style,
+            },
+          }),
+        });
+        console.log("Zep response for signin:", zepResponse);
         if (profile.is_admin) {
           window.location.href = "/admin";
         } else {
