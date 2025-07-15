@@ -1,9 +1,10 @@
 "use client";
 
 import type React from "react";
-import { useState, useEffect } from "react";
+import { useRef, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import ReactMarkdown from "react-markdown";
 import { useRouter } from "next/navigation";
 import {
   Send,
@@ -17,24 +18,24 @@ import {
   User,
   Settings,
   Plus,
+  Loader2,
+  X,
 } from "lucide-react";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { createClient } from "@/lib/supabase/client";
+import { useBetty, useInitialMessageChat } from "../../baml_client/react/hooks";
 
 interface ChatUser {
   user_id: string;
-  first_name: string;
-  last_name: string;
-  primary_influence_style: string;
-  secondary_influence_style: string;
-  avatar_url: string;
+  name: string;
+  influence_style: string;
+  avatar: string;
   status: "online" | "offline" | "away";
   color: string;
 }
 
 interface Message {
-  id: string;
   content: string;
-  sender: "admin" | "user" | "assistant";
+  role: "developer" | "user" | "assistant";
   timestamp: Date;
   displayName?: string;
 }
@@ -84,121 +85,534 @@ const getInfluenceIcon = (style: string) => {
 };
 
 export default function AdminChatInterface() {
+  const createZepSession = async (sessionId: string) => {
+    const response = await fetch("/api/zep/session", {
+      method: "POST",
+      body: JSON.stringify({
+        userId: selectedUser?.user_id,
+        sessionId: sessionId,
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to create session");
+    }
+    return response.json();
+  };
+  const addZepMessage = async (
+    sessionId: string,
+    content: string,
+    role: string,
+    userName: string | null
+  ) => {
+    const response = await fetch("/api/zep/message", {
+      method: "POST",
+      body: JSON.stringify({ sessionId, content, role, userName }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to add message");
+    }
+    return response.json();
+  };
+  const getZepMemoryContext = async (sessionId: string) => {
+    const response = await fetch("/api/zep/memory", {
+      method: "POST",
+      body: JSON.stringify({
+        sessionId: sessionId,
+        userId: selectedUser?.user_id || "",
+      }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get memory context");
+    }
+    const data = await response.json();
+    return data.memory;
+  };
+  const betty = useBetty({
+    stream: true,
+    onStreamData: (data) => {
+      setMessages((prev) => {
+        const lastMessage = prev[prev.length - 1];
+
+        if (lastMessage?.role === "assistant") {
+          return [
+            ...prev.slice(0, -1),
+            {
+              ...lastMessage,
+              content: data?.answer || "", // Replace content, don't append
+            },
+          ];
+        } else {
+          return [
+            ...prev,
+            {
+              content: data?.answer || "",
+              role: "assistant",
+              timestamp: new Date(),
+              displayName: "Assistant",
+            },
+          ];
+        }
+      });
+    },
+    onFinalData: async (data) => {
+      if (!currentSessionId) return;
+      await insertMessage(
+        selectedUser?.user_id || "",
+        currentSessionId || "",
+        data?.answer || "",
+        "assistant"
+      );
+      await addZepMessage(
+        currentSessionId || "",
+        data?.answer || "",
+        "assistant",
+        selectedUser?.name || null
+      );
+      setChatHistory((prev) => {
+        const newChatHistory = [...prev];
+        const chatIndex = newChatHistory.findIndex(
+          (chat) => chat.id === currentSessionId
+        );
+        if (chatIndex !== -1) {
+          const chat = { ...newChatHistory[chatIndex] };
+          chat.lastMessage = data?.answer || "";
+          chat.timestamp = new Date();
+          newChatHistory.splice(chatIndex, 1); // Remove from current position
+          newChatHistory.unshift(chat); // Insert at the beginning
+        }
+        return newChatHistory;
+      });
+      setIsLoading(false);
+    },
+  });
+  const initialMessageChat = useInitialMessageChat({
+    stream: true,
+    onStreamData: (data) => {
+      // console.log("Initial message chat data", data);
+      setMessages(
+        (prev) =>
+          [
+            {
+              content: data || "",
+              role: "assistant",
+              timestamp: new Date(),
+              displayName: "Assistant",
+            },
+          ] as Message[]
+      );
+    },
+    onFinalData: async (data) => {
+      const newSessionId = crypto.randomUUID();
+      setCurrentSessionId(newSessionId);
+      localStorage.setItem("currentSessionId", newSessionId);
+      await insertMessage(
+        selectedUser?.user_id || "",
+        newSessionId || "",
+        data || "",
+        "assistant"
+      );
+      await createZepSession(newSessionId || "");
+      await addZepMessage(
+        newSessionId || "",
+        data || "",
+        "assistant",
+        selectedUser?.name || null
+      );
+      setChatHistory(
+        (prev) =>
+          [
+            {
+              id: newSessionId || "",
+              userName: selectedUser?.name || "",
+              userAvatar: selectedUser?.avatar || "",
+              userColor: selectedUser?.color || "",
+              lastMessage: data || "",
+              timestamp: new Date(),
+            },
+            ...prev,
+          ] as ChatHistory[]
+      );
+      setIsLoading(false);
+    },
+  });
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [instructions, setInstructions] = useState<string | null>(null);
   const [input, setInput] = useState("");
-  const [currentSender, setCurrentSender] = useState<"admin" | "user">("user");
+  const [currentSender, setCurrentSender] = useState<"developer" | "user">(
+    "user"
+  );
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
-  const [globalSystemInstruction, setGlobalSystemInstruction] = useState("");
-  const router = useRouter();
-
-  useEffect(() => {
-    // Get user data from localStorage
-    const userData = localStorage.getItem("selectedUser");
-    if (userData) {
-      const user = JSON.parse(userData);
-      setSelectedUser(user);
-
-      // Set initial welcome message from AI Assistant
-      const initialMessages: Message[] = [
-        {
-          id: "1",
-          content: `Hello Admin! I'm monitoring the conversation with ${user.name} (${user.influenceStyle}). You can send messages as yourself (admin prompts) or as ${user.name} (user prompts), and I'll respond accordingly.`,
-          sender: "assistant",
-          timestamp: new Date(Date.now() - 60000),
-        },
-      ];
-      setMessages(initialMessages);
-
-      // Load or create chat history for the selected user only
-      loadChatHistory(user);
+  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const supabase = createClient();
+  const [toast, setToast] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
+  const fetchInstructions = async () => {
+    const { data, error } = await supabase
+      .from("instructions")
+      .select("instruction")
+      .eq("id", 1)
+      .single();
+    if (error) {
+      console.error("Error fetching instructions:", error);
     }
-  }, []);
+    return data?.instruction || null;
+  };
+  const insertMessage = async (
+    user_id: string,
+    session_id: string | null,
+    message_content: string,
+    message_role: string
+  ) => {
+    const { data, error } = await supabase
+      .from("messages")
+      .insert({
+        user_id: user_id,
+        session_id: session_id,
+        message_content: message_content,
+        message_role: message_role,
+      })
+      .select("*")
+      .single();
+    if (error) {
+      console.error("Error inserting message:", error);
+      return data;
+    }
+    console.log("Message inserted", data);
+    return data;
+  };
+  const handleNewChat = async () => {
+    setMessages([]);
+    if (selectedUser) {
+      await initializeChat(selectedUser.user_id);
+    }
+  };
+  const initializeChat = async (user_id: string) => {
+    await fetchInstructions().then((data) => {
+      setInstructions(data || "");
+    });
+    const influenceStyle = selectedUser?.influence_style;
+    // const guidance_retrievals = await fetch("/api/llama/guidance", {
+    //   method: "POST",
+    //   body: JSON.stringify({
+    //     query: `How to start a conversation with a user with influence style: ${influenceStyle}?`,
+    //   }),
+    // });
+    // const retrieved_guidance = await guidance_retrievals.json();
+    // const retrieved_guidance_text = retrieved_guidance
+    //   .map((retrieval: any) => retrieval.node.text)
+    //   .join("\n\n");
+    // const guidance_prompt = `${instructions}\n\nBelow are additional guidance that you can use to help the user: ${retrieved_guidance_text}`;
+    // initialMessageChat.mutate(
+    //   guidance_prompt || "",
+    //   "",
+    //   influenceStyle || "",
+    //   ""
+    // );
+    initialMessageChat.mutate(instructions || "", "", influenceStyle || "", "");
+    return;
+  };
+  const fetchLatestSessionMessages = async () => {
+    if (!selectedUser) return;
 
-  useEffect(() => {
-    // Load global OpenAI settings
-    const savedSystemInstruction = localStorage.getItem(
-      "openai_system_instruction"
+    // 1. Fetch all messages for the user, newest first
+    const { data: allMessages, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("user_id", selectedUser.user_id)
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching messages:", error);
+      setMessages([]);
+      setChatHistory([]);
+      return;
+    }
+
+    // if (!allMessages || allMessages.length === 0) {
+    //   await initializeChat(selectedUser.user_id);
+    //   return;
+    // }
+
+    // 2. Build chat history: unique sessions with latest message in each
+    const seenSessions = new Set();
+    const tempChatHistory: ChatHistory[] = [];
+    for (const msg of allMessages) {
+      if (!seenSessions.has(msg.session_id)) {
+        seenSessions.add(msg.session_id);
+        tempChatHistory.push({
+          id: msg.session_id,
+          userName: selectedUser.name,
+          userAvatar: selectedUser.avatar,
+          userColor: selectedUser.color,
+          lastMessage: msg.message_content,
+          timestamp: new Date(msg.created_at),
+        });
+      }
+    }
+    setChatHistory(tempChatHistory);
+
+    // 3. Find the latest session_id
+    const latestSessionId =
+      tempChatHistory.length > 0 ? tempChatHistory[0].id : null;
+    if (!latestSessionId) {
+      setMessages([]);
+      return;
+    }
+
+    // 4. Fetch all messages for the latest session, oldest first
+    fetchMessagesForSession(latestSessionId);
+  };
+  const fetchMessagesForSession = async (sessionId: string) => {
+    const { data: sessionMessages, error } = await supabase
+      .from("messages")
+      .select("*")
+      .eq("session_id", sessionId)
+      .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching session messages:", error);
+      setMessages([]);
+      return;
+    }
+
+    setMessages(
+      (sessionMessages || []).map((message) => ({
+        content: message.message_content,
+        role: message.message_role,
+        timestamp: new Date(message.created_at),
+        displayName:
+          message.message_role === "user"
+            ? selectedUser?.name
+            : message.message_role === "developer"
+            ? "Admin"
+            : "Assistant",
+      }))
     );
-    if (savedSystemInstruction) {
-      setGlobalSystemInstruction(savedSystemInstruction);
+    setCurrentSessionId(sessionId);
+    localStorage.setItem("currentSessionId", sessionId);
+  };
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+  useEffect(() => {
+    if (!selectedUser) return;
+    fetchInstructions().then((data) => {
+      setInstructions(data || "");
+    });
+    // const upsertZepUser = async () => {
+    //   const response = await fetch("/api/zep/user", {
+    //     method: "POST",
+    //     body: JSON.stringify({
+    //       userId: selectedUser.user_id,
+    //       email: "",
+    //       first_name: "",
+    //       last_name: "",
+    //       metadata: {
+    //         name: selectedUser.name,
+    //         influence_style: selectedUser.influenceStyle,
+    //         last_active: new Date().toISOString(),
+    //       },
+    //     }),
+    //   });
+    //   if (!response.ok) {
+    //     throw new Error("Failed to upsert user");
+    //   }
+    //   return response.json();
+    // };
+    // upsertZepUser();
+    fetchLatestSessionMessages();
+  }, [selectedUser]);
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => setToast(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
+  useEffect(() => {
+    const localStoredUser = localStorage.getItem("selectedUser");
+    if (localStoredUser) {
+      const user = JSON.parse(localStoredUser);
+      setSelectedUser(user);
     }
   }, []);
 
-  const loadChatHistory = (currentUser: ChatUser) => {
-    // Only show the current user's chat history
-    const userHistory: ChatHistory[] = [
-      {
-        id: currentUser.user_id,
-        userName: `${currentUser.first_name} ${currentUser.last_name}`,
-        userAvatar: currentUser.avatar_url,
-        userColor: currentUser.color,
-        lastMessage: "Hello Admin! I'm monitoring the conversation...",
-        timestamp: new Date(),
-      },
-    ];
-    setChatHistory(userHistory);
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const textarea = e.target;
+    setInput(textarea.value);
+
+    // Reset height to auto to get the correct scrollHeight
+    textarea.style.height = "auto";
+
+    // Calculate new height with limits
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 48), 120); // min 48px, max 120px
+    textarea.style.height = `${newHeight}px`;
+  };
+
+  const handleTextareaKeyDown = (
+    e: React.KeyboardEvent<HTMLTextAreaElement>
+  ) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit(e as any);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!input.trim() || !selectedUser) return;
+    try {
+      e.preventDefault();
 
-    // Add user message to chat
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
-      sender: currentSender,
-      timestamp: new Date(),
-      displayName:
-        currentSender === "user"
-          ? `${selectedUser.first_name} ${selectedUser.last_name}`
-          : "Admin",
-    };
+      if (!input.trim() || !selectedUser) return;
+      setInput("");
+      setIsLoading(true);
 
-    setMessages((prev) => [...prev, userMessage]);
-    setInput("");
-
-    // Update chat history
-    setChatHistory((prev) =>
-      prev.map((chat) =>
-        chat.id === selectedUser.user_id
-          ? { ...chat, lastMessage: input, timestamp: new Date() }
-          : chat
-      )
-    );
-
-    // TODO: Here you will add the OpenAI API call
-    // The message should be sent to OpenAI with:
-    // - system instruction: globalSystemInstruction (from global settings)
-    // - role: currentSender (either "system" or "user")
-    // - content: input
-    // - context about the selected user and their influence style
-    // - fine-tuning data will be applied at the model level
-
-    // Placeholder for AI response (you'll replace this with actual OpenAI call)
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
-        content: `[AI Response Placeholder] - Received ${currentSender} message: "${input}". This will be replaced with actual OpenAI response.`,
-        sender: "assistant",
+      const userMessage: Message = {
+        content: input,
+        role: currentSender,
         timestamp: new Date(),
+        displayName: currentSender === "user" ? selectedUser.name : "Admin",
       };
-      setMessages((prev) => [...prev, aiResponse]);
-
-      // Update chat history with AI response
-      setChatHistory((prev) =>
-        prev.map((chat) =>
-          chat.id === selectedUser.user_id
-            ? {
-                ...chat,
-                lastMessage: "AI responded to your message",
-                timestamp: new Date(),
-              }
-            : chat
-        )
+      setMessages((prev) => [...prev, userMessage]);
+      insertMessage(
+        selectedUser?.user_id || "",
+        currentSessionId || "",
+        input,
+        currentSender
       );
-    }, 1000);
+      if (currentSender === "developer") {
+        // const userInfluenceStyle = selectedUser?.influence_style;
+        // const feedbackTemplate = `=============================\n\n
+        //   # context\n\n
+        //   user's influence style: ${userInfluenceStyle}\n\n
+        //   # conversation history\n\n
+        //   ${messages
+        //     .slice(-2)
+        //     .map((message) => {
+        //       if (message.role === "user") {
+        //         return `user: ${message.content}`;
+        //       } else if (message.role === "assistant") {
+        //         return `assistant: ${message.content}`;
+        //       }
+        //       return "";
+        //     })
+        //     .filter(Boolean)
+        //     .join("\n")}\n\n
+        //   # feedback: ${input}\n\n`;
+        // const feedbackIngest = await fetch("/api/llama/feedback/ingest", {
+        //   method: "POST",
+        //   body: JSON.stringify({
+        //     text: feedbackTemplate,
+        //     userInfluenceStyle: userInfluenceStyle,
+        //   }),
+        // });
+        // const feedbackIngestData = await feedbackIngest.json();
+        // if (feedbackIngestData.success == true) {
+        //   setToast({
+        //     type: "success",
+        //     message: "Feedback ingested successfully",
+        //   });
+        // } else {
+        //   setToast({
+        //     type: "error",
+        //     message: "Error ingesting feedback",
+        //   });
+        // }
+        // setIsLoading(false);
+        return;
+      }
+      addZepMessage(
+        currentSessionId || "",
+        input,
+        "user",
+        selectedUser?.name || ""
+      );
+      const zepMemoryContext = await getZepMemoryContext(
+        currentSessionId || ""
+      );
+
+      // const userInfluenceStyle = selectedUser?.influenceStyle;
+      // const feedbackQuery = `
+      //   User's influence style is: ${userInfluenceStyle}\n\n
+      //   user's message: ${input}\n\n
+      //   In this case how should the assistant respond?\n\n`;
+      // console.log("feedbackQuery", feedbackQuery);
+      // const feedbackResponse = await fetch("/api/llama/feedback/", {
+      //   method: "POST",
+      //   body: JSON.stringify({
+      //     query: feedbackQuery,
+      //     userInfluenceStyle: userInfluenceStyle,
+      //   }),
+      // });
+      // console.log("feedbackResponse", feedbackResponse);
+      // const feedbackResponseData = await feedbackResponse.json();
+      // console.log("feedbackResponseData", feedbackResponseData);
+      // const relevantFeedbacks = feedbackResponseData
+      //   .map((feedback: any) => feedback.node.text + "\n\n")
+      //   .join("\n");
+      // console.log("relevantFeedbacks", relevantFeedbacks);
+
+      // const guidanceQuery = `
+      //   User's influence style is: ${userInfluenceStyle}\n\n
+      //   Here is user's message: ${input}\n\n
+      //   In this case how should the assistant respond?\n\n`;
+
+      // const guidanceResponse = await fetch("/api/llama/guidance/", {
+      //   method: "POST",
+      //   body: JSON.stringify({
+      //     query: guidanceQuery,
+      //     userInfluenceStyle: userInfluenceStyle,
+      //   }),
+      // });
+      // console.log("guidanceResponse", guidanceResponse);
+      // const guidanceResponseData = await guidanceResponse.json();
+      // console.log("guidanceResponseData", guidanceResponseData);
+      // const relevantGuidance = guidanceResponseData
+      //   .map((guidance: any) => guidance.node.text + "\n\n")
+      //   .join("\n");
+      // console.log("relevantGuidance", relevantGuidance);
+
+      // const finalInstructions = `
+      //   ${instructions}\n\n${
+      //   relevantGuidance.length > 0
+      //     ? "Below is the relevant additional guidance for this user.\n\n"
+      //     : ""
+      // }
+      //   ${relevantGuidance}
+      // `;
+
+      betty.mutate(
+        instructions || "", // Can pass additional guidance here
+        [
+          ...messages
+            .filter((m) => m.role !== "developer")
+            .map((m) => ({
+              role: m.role as "user" | "assistant",
+              content: m.content,
+            })),
+          {
+            role: "user",
+            content: input,
+          },
+        ],
+        "", // Can pass relevant feedbacks here
+        {
+          name: selectedUser?.name || "",
+          influence_style: selectedUser?.influence_style || "",
+        },
+        zepMemoryContext
+      );
+    } catch (error) {
+      console.error("Error submitting message:", error);
+      setToast({
+        type: "error",
+        message: "Error submitting message",
+      });
+    }
   };
 
   const formatTime = (date: Date) => {
@@ -223,12 +637,13 @@ export default function AdminChatInterface() {
 
   const handleBackToDashboard = () => {
     localStorage.removeItem("selectedUser");
-    router.push("/admin");
+    localStorage.removeItem("currentSessionId");
+    router.push("/");
   };
 
-  const getMessageColor = (sender: string) => {
-    switch (sender) {
-      case "admin":
+  const getMessageColor = (role: string) => {
+    switch (role) {
+      case "developer":
         return "bg-[#92278F] text-white";
       case "user":
         return selectedUser
@@ -240,16 +655,10 @@ export default function AdminChatInterface() {
         return "bg-gray-100 text-black";
     }
   };
-  const getUserInitials = (user: ChatUser) => {
-    if (user.first_name && user.last_name) {
-      return `${user.first_name[0]}${user.last_name[0]}`.toUpperCase();
-    }
-    return "U";
-  };
 
-  const getAvatarForSender = (sender: string) => {
-    switch (sender) {
-      case "admin":
+  const getAvatarForSender = (role: string) => {
+    switch (role) {
+      case "developer":
         return (
           <div className="w-8 h-8 rounded-full bg-[#92278F] flex items-center justify-center flex-shrink-0">
             <Settings className="w-4 h-4 text-white" />
@@ -260,15 +669,7 @@ export default function AdminChatInterface() {
           <div
             className={`w-8 h-8 rounded-full ${selectedUser.color} flex items-center justify-center flex-shrink-0 text-white font-bold text-xs`}
           >
-            <Avatar className="h-12 w-12 transition-all duration-200 group-hover:brightness-75">
-              <AvatarImage
-                src={selectedUser.avatar_url}
-                alt={`${selectedUser.first_name} ${selectedUser.last_name}`}
-              />
-              <AvatarFallback className="bg-[#92278F] text-white text-2xl font-bold">
-                {getUserInitials(selectedUser)}
-              </AvatarFallback>
-            </Avatar>
+            {selectedUser.avatar}
           </div>
         ) : (
           <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center flex-shrink-0">
@@ -298,12 +699,12 @@ export default function AdminChatInterface() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <p className="font-inter text-gray-600 mb-4">Loading admin chat...</p>
+          <p className="font-inter text-gray-600 mb-4">Loading chat...</p>
           <Button
             onClick={handleBackToDashboard}
             className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
           >
-            Back to Admin Dashboard
+            Back to Dashboard
           </Button>
         </div>
       </div>
@@ -311,9 +712,9 @@ export default function AdminChatInterface() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="h-screen bg-white flex">
       {/* Chat History Sidebar */}
-      <div className="w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
+      <div className="w-80 bg-gray-50 border-r border-gray-200 flex flex-col">
         {/* Sidebar Header */}
         <div className="p-4 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between mb-4">
@@ -324,9 +725,10 @@ export default function AdminChatInterface() {
               className="text-gray-600 hover:text-[#92278F] p-2"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Admin Dashboard
+              Dashboard
             </Button>
             <Button
+              onClick={() => handleNewChat()}
               variant="ghost"
               size="sm"
               className="text-gray-600 hover:text-[#92278F] p-2"
@@ -335,35 +737,51 @@ export default function AdminChatInterface() {
             </Button>
           </div>
           <h2 className="font-playfair text-lg font-bold text-gray-800">
-            Monitoring
+            Chat History
           </h2>
         </div>
 
         {/* Chat History List - Only showing the current user */}
         <div className="flex-1 overflow-y-auto">
-          {chatHistory.map((chat) => (
+          {chatHistory.map((chat, idx) => (
             <div
               key={chat.id}
-              className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]"
+              className={`p-4 border-b border-gray-100 border-l-4 cursor-pointer transition-all duration-300
+                ${
+                  currentSessionId === chat.id
+                    ? "border-l-[#92278F] !bg-[#f3e8fa]"
+                    : "border-l-transparent hover:bg-[#f3e8fa] bg-white"
+                }
+                animate-fadeInUp 
+              `}
+              style={{ animationDelay: `${idx * 60}ms` }} // Staggered effect
+              onClick={() => fetchMessagesForSession(chat.id)}
             >
               <div className="flex items-center space-x-3">
-                <div
-                  className={`w-10 h-10 rounded-full ${chat.userColor} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
-                >
-                  {chat.userAvatar}
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">
-                      {chat.userName}
-                    </h3>
                     <span className="text-xs text-gray-500 flex-shrink-0">
                       {formatHistoryTime(chat.timestamp)}
                     </span>
                   </div>
-                  <p className="text-sm text-gray-600 truncate mt-1">
-                    {chat.lastMessage}
-                  </p>
+                  <div className="text-sm text-gray-600 truncate mt-1 h-5 overflow-hidden">
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => (
+                          <p
+                            style={{
+                              whiteSpace: "pre-line",
+                              marginBottom: "1em",
+                            }}
+                          >
+                            {children}
+                          </p>
+                        ),
+                      }}
+                    >
+                      {chat.lastMessage}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
             </div>
@@ -379,16 +797,8 @@ export default function AdminChatInterface() {
             <div
               className={`w-12 h-12 rounded-full ${selectedUser.color} flex items-center justify-center text-white font-bold font-inter relative`}
             >
-              <Avatar className="h-12 w-12 transition-all duration-200 group-hover:brightness-75">
-                <AvatarImage
-                  src={selectedUser.avatar_url}
-                  alt={`${selectedUser.first_name} ${selectedUser.last_name}`}
-                />
-                <AvatarFallback className="bg-[#92278F] text-white text-2xl font-bold">
-                  {getUserInitials(selectedUser)}
-                </AvatarFallback>
-              </Avatar>
-              <div
+              {selectedUser.avatar}
+              {/* <div
                 className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
                   selectedUser.status === "online"
                     ? "bg-green-500"
@@ -396,78 +806,77 @@ export default function AdminChatInterface() {
                     ? "bg-yellow-500"
                     : "bg-gray-400"
                 }`}
-              />
+              /> */}
             </div>
             <div>
               <h1 className="font-playfair text-2xl font-bold">
-                Admin Monitoring: {selectedUser.first_name}{" "}
-                {selectedUser.last_name}
+                AI Chat with {selectedUser.name}
               </h1>
               <div className="flex items-center space-x-2 mt-1">
                 <div className="text-white/80">
-                  {getInfluenceIcon(
-                    selectedUser.primary_influence_style +
-                      (selectedUser.secondary_influence_style
-                        ? "-" + selectedUser.secondary_influence_style
-                        : "")
-                  )}
+                  {getInfluenceIcon(selectedUser.influence_style)}
                 </div>
-                {/* Show name only for single styles */}
-                {!selectedUser.primary_influence_style.includes("-") && (
-                  <span className="font-inter text-sm text-white/90 capitalize">
-                    {selectedUser.primary_influence_style}
-                  </span>
-                )}
+                <span className="font-inter text-sm text-white/90 capitalize">
+                  {selectedUser.influence_style}
+                </span>
               </div>
-              {globalSystemInstruction && (
-                <div className="flex items-center space-x-1 mt-1">
-                  <Settings className="w-3 h-3 text-white/60" />
-                  <span className="font-inter text-xs text-white/80">
-                    Custom system instruction active
-                  </span>
-                </div>
-              )}
             </div>
           </div>
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-100">
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {messages.map((message, index) => (
             <div
-              key={message.id}
-              className={`flex space-x-3 animate-in slide-in-from-bottom-2 duration-300 ${
-                message.sender === "assistant"
+              key={index}
+              className={`flex space-x-3 ${
+                message.role === "assistant"
                   ? "items-start"
                   : "items-start justify-end"
               }`}
               style={{ animationDelay: `${index * 100}ms` }}
             >
               {/* Avatar - show first for AI, last for Admin/User */}
-              {message.sender === "assistant" &&
-                getAvatarForSender(message.sender)}
+              {message.role === "assistant" && getAvatarForSender(message.role)}
 
               <div
                 className={`flex flex-col ${
-                  message.sender === "assistant" ? "items-start" : "items-end"
+                  message.role === "assistant" ? "items-start" : "items-end"
                 } max-w-[70%]`}
               >
                 {/* Message bubble */}
                 <div
                   className={`px-4 py-3 rounded-2xl ${getMessageColor(
-                    message.sender
+                    message.role
                   )} shadow-sm ${
-                    message.sender === "assistant"
+                    message.role === "assistant"
                       ? "rounded-bl-md"
                       : "rounded-br-md"
                   }`}
                 >
-                  <p className="font-inter text-sm leading-relaxed">
-                    {message.content}
-                  </p>
+                  {message.role === "assistant" ? (
+                    <ReactMarkdown
+                      components={{
+                        p: ({ children }) => (
+                          <p
+                            style={{
+                              whiteSpace: "pre-line",
+                              marginBottom: "1em",
+                            }}
+                          >
+                            {children}
+                          </p>
+                        ),
+                      }}
+                    >
+                      {message.content}
+                    </ReactMarkdown>
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
                 </div>
 
-                {/* Timestamp and sender info */}
+                {/* Timestamp and role info */}
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="text-xs text-gray-500 font-inter">
                     {formatTime(message.timestamp)}
@@ -484,29 +893,30 @@ export default function AdminChatInterface() {
               </div>
 
               {/* Avatar - show last for Admin/User */}
-              {message.sender !== "assistant" &&
-                getAvatarForSender(message.sender)}
+              {message.role !== "assistant" && getAvatarForSender(message.role)}
             </div>
           ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input Area */}
         <div className="p-6 bg-white border-t border-gray-200">
           <div className="space-y-4">
-            {/* Sender Selection */}
+            {/* role Selection */}
             <div className="flex space-x-2">
               <Button
                 type="button"
-                variant={currentSender === "admin" ? "default" : "outline"}
-                onClick={() => setCurrentSender("admin")}
+                variant={currentSender === "developer" ? "default" : "outline"}
+                onClick={() => setCurrentSender("developer")}
                 className={`font-inter text-sm flex items-center space-x-2 ${
-                  currentSender === "admin"
+                  currentSender === "developer"
                     ? "bg-[#92278F] hover:bg-[#7a1f78] text-white"
                     : "border-[#92278F] text-[#92278F] hover:bg-[#92278F] hover:text-white"
                 }`}
+                disabled={true}
               >
                 <Settings className="w-4 h-4" />
-                <span>Send as Admin</span>
+                <span>Send Feedback</span>
               </Button>
               <Button
                 type="button"
@@ -523,44 +933,71 @@ export default function AdminChatInterface() {
                         "bg-"
                       )} hover:text-white`
                 }`}
+                disabled={currentSender === "user" ? true : false}
               >
                 <User className="w-4 h-4" />
-                <span>
-                  Send as {selectedUser.first_name} {selectedUser.last_name}
-                </span>
+                <span>Send as {selectedUser.name}</span>
               </Button>
             </div>
 
             {/* Message Input */}
             <form onSubmit={handleSubmit} className="flex space-x-3">
-              <Input
+              <Textarea
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleTextareaChange}
+                onKeyDown={handleTextareaKeyDown}
                 placeholder={
-                  currentSender === "admin"
-                    ? "Enter admin feedback..."
-                    : `Message as ${selectedUser.first_name} ${selectedUser.last_name}...`
+                  currentSender === "developer"
+                    ? "Enter feedback..."
+                    : `Message as ${selectedUser.name}...`
                 }
-                className="flex-1 font-inter border-gray-300 focus:border-[#92278F] focus:ring-[#92278F] h-12"
+                className="flex-1 font-inter border-gray-300 focus:border-[#92278F] focus:ring-[#92278F] resize-none min-h-[48px] max-h-[120px]"
+                rows={1}
               />
               <Button
                 type="submit"
                 className="bg-[#92278F] hover:bg-[#7a1f78] text-white px-6 h-12"
-                disabled={!input.trim()}
+                disabled={!input.trim() || isLoading}
               >
-                <Send className="w-4 h-4" />
+                {isLoading ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <Send className="w-4 h-4" />
+                )}
               </Button>
             </form>
 
             {/* Helper text */}
             <p className="text-xs text-gray-500 font-inter text-center">
-              {currentSender === "admin"
-                ? "Admin feedback helps guide the AI's behavior and responses"
-                : `User messages are sent as if ${selectedUser.first_name} ${selectedUser.last_name} is speaking`}
+              {currentSender === "developer"
+                ? "Feedback helps guide the AI's behavior and responses"
+                : `User messages are sent as if ${selectedUser.name} is speaking`}
             </p>
           </div>
         </div>
       </div>
+      {/* Toast Notification */}
+      {toast && (
+        <div className="fixed top-4 right-4 z-50">
+          <div
+            className={`px-4 py-3 rounded-lg shadow-lg flex items-center space-x-2 ${
+              toast.type === "success"
+                ? "bg-green-500 text-white"
+                : "bg-red-500 text-white"
+            }`}
+          >
+            <span className="font-inter text-sm">{toast.message}</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setToast(null)}
+              className="text-white hover:bg-white/20 p-1"
+            >
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

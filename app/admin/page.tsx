@@ -333,9 +333,15 @@ The system uses advanced machine learning algorithms trained on decades of meteo
       "selectedUser",
       JSON.stringify({
         user_id: user.user_id,
+        name: user.first_name + " " + user.last_name,
         first_name: user.first_name,
         last_name: user.last_name,
         email: user.email,
+        influence_style:
+          user.primary_influence_style +
+          (user.secondary_influence_style
+            ? "-" + user.secondary_influence_style
+            : ""),
         primary_influence_style: user.primary_influence_style,
         secondary_influence_style: user.secondary_influence_style,
         avatar: user.avatar,
