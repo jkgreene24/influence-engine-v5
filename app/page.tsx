@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Dashboard() {
+export default function Home() {
   const [isHovered, setIsHovered] = useState(false);
   const [user, setUser] = useState<any>(null);
   const router = useRouter();
