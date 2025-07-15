@@ -1,3 +1,4 @@
+import { withBaml } from '@boundaryml/baml-nextjs-plugin';
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   eslint: {
@@ -11,4 +12,4 @@ const nextConfig = {
   },
 }
 
-export default nextConfig
+export default withBaml(nextConfig)
