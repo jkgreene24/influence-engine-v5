@@ -333,16 +333,8 @@ export default function ChatInterface() {
               className="p-4 border-b border-gray-100 bg-white border-l-4 border-l-[#92278F]"
             >
               <div className="flex items-center space-x-3">
-                <div
-                  className={`w-10 h-10 rounded-full ${chat.userColor} flex items-center justify-center text-white font-bold text-sm flex-shrink-0`}
-                >
-                  {chat.userAvatar}
-                </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between">
-                    <h3 className="font-inter font-medium text-gray-800 truncate capitalize">
-                      {chat.userName}
-                    </h3>
                     <span className="text-xs text-gray-500 flex-shrink-0">
                       {formatHistoryTime(chat.timestamp)}
                     </span>
@@ -363,34 +355,23 @@ export default function ChatInterface() {
         <div className="bg-gradient-to-r from-[#92278F] to-[#a83399] text-white p-6 border-b">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div
-                className={`w-12 h-12 rounded-full ${currentUser.color} flex items-center justify-center text-white font-bold font-inter relative`}
-              >
-                {currentUser.avatar}
-                <div
-                  className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${
-                    currentUser.status === "online"
-                      ? "bg-green-500"
-                      : currentUser.status === "away"
-                      ? "bg-yellow-500"
-                      : "bg-gray-400"
-                  }`}
-                />
-              </div>
               <div>
                 <h1 className="font-playfair text-2xl font-bold">
-                  AI Chat Assistant
+                  {currentUser.name}
                 </h1>
                 <div className="flex items-center space-x-2 mt-1">
                   <div className="text-white/80">
                     {getInfluenceIcon(currentUser.influenceStyle)}
                   </div>
-                  {/* Show name only for single styles */}
-                  {!currentUser.influenceStyle.includes("-") && (
-                    <span className="font-inter text-sm text-white/90 capitalize">
-                      {currentUser.influenceStyle}
-                    </span>
-                  )}
+                  <span className="font-inter text-sm text-white/90 capitalize">
+                    {currentUser.influenceStyle
+                      .split("-")
+                      .map(
+                        (style) =>
+                          style.charAt(0).toUpperCase() + style.slice(1)
+                      )
+                      .join(" + ")}
+                  </span>
                 </div>
                 {globalSystemInstruction && (
                   <div className="flex items-center space-x-1 mt-1">
