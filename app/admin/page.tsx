@@ -175,7 +175,23 @@ export default function AdminDashboard() {
   >("message");
 
   const router = useRouter();
-
+  const supabase = createClient();
+  const fetchInstructions = async () => {
+    const { data, error } = await supabase
+      .from("instructions")
+      .select("instruction")
+      .eq("id", 1)
+      .single();
+    if (error) {
+      console.error("Error fetching instructions:", error);
+    }
+    return data?.instruction || null;
+  };
+  useEffect(() => {
+    fetchInstructions().then((data) => {
+      setSystemInstruction(data || "");
+    });
+  }, []);
   // Enhanced search function that supports multiple terms
   const matchesSearchTerms = (user: User, searchTerms: string[]): boolean => {
     // If no search terms, show all users
@@ -242,7 +258,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 
   const handleLogout = async () => {
     try {
-      const supabase = createClient();
       const { error } = await supabase.auth.signOut();
 
       if (error) {
@@ -253,9 +268,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 
       // Clear any stored data
       localStorage.removeItem("selectedUser");
-      localStorage.removeItem("openai_system_instruction");
-      localStorage.removeItem("fine_tuning_data");
-      localStorage.removeItem("fine_tuning_data_type");
 
       // Redirect to home page
       window.location.href = "/";
@@ -265,16 +277,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
     }
   };
 
-  useEffect(() => {
-    // Load saved settings from localStorage
-    const savedSystemInstruction = localStorage.getItem(
-      "openai_system_instruction"
-    );
-    if (savedSystemInstruction) {
-      setSystemInstruction(savedSystemInstruction);
-    }
-  }, []);
-
   const fetchUsers = async () => {
     try {
       setLoading(true);
@@ -282,8 +284,6 @@ The system uses advanced machine learning algorithms trained on decades of meteo
 
       // Validate environment variables first
       validateEnvironment();
-
-      const supabase = createClient();
 
       const { data, error } = await supabase
         .from("profiles")
@@ -360,15 +360,26 @@ The system uses advanced machine learning algorithms trained on decades of meteo
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
-      // Save system instruction to localStorage
-      localStorage.setItem("openai_system_instruction", systemInstruction);
-
-      // Show success message
-      alert("Settings saved successfully!");
-      setShowSettings(false);
+      // Save system instruction to Supabase
+      const { data, error } = await supabase
+        .from("instructions")
+        .update({ instruction: systemInstruction })
+        .eq("id", 1);
+      if (error) {
+        throw new Error("Error saving instructions:", error);
+      } else {
+        setToast({
+          type: "success",
+          message: "Settings saved successfully!",
+        });
+        setShowSettings(false);
+      }
     } catch (error) {
       console.error("Error saving settings:", error);
-      alert("Error saving settings. Please try again.");
+      setToast({
+        type: "error",
+        message: "Error saving settings. Please try again.",
+      });
     } finally {
       setSettingsLoading(false);
     }
