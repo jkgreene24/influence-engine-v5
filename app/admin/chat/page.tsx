@@ -85,20 +85,8 @@ const getInfluenceIcon = (style: string) => {
 };
 
 export default function AdminChatInterface() {
-  const createZepSession = async (sessionId: string) => {
-    const response = await fetch("/api/zep/session", {
-      method: "POST",
-      body: JSON.stringify({
-        userId: selectedUser?.user_id,
-        sessionId: sessionId,
-      }),
-    });
-    if (!response.ok) {
-      throw new Error("Failed to create session");
-    }
-    return response.json();
-  };
   const addZepMessage = async (
+    userId: string,
     sessionId: string,
     content: string,
     role: string,
@@ -106,7 +94,7 @@ export default function AdminChatInterface() {
   ) => {
     const response = await fetch("/api/zep/message", {
       method: "POST",
-      body: JSON.stringify({ sessionId, content, role, userName }),
+      body: JSON.stringify({ userId, sessionId, content, role, userName }),
     });
     if (!response.ok) {
       throw new Error("Failed to add message");
@@ -121,57 +109,51 @@ export default function AdminChatInterface() {
         userId: selectedUser?.user_id || "",
       }),
     });
-    if (!response.ok) {
-      throw new Error("Failed to get memory context");
-    }
     const data = await response.json();
-    return data.memory;
+    return data.memory || "";
   };
   const betty = useBetty({
     stream: true,
     onStreamData: (data) => {
-      setMessages((prev) => {
-        const lastMessage = prev[prev.length - 1];
-
-        if (lastMessage?.role === "assistant") {
-          return [
-            ...prev.slice(0, -1),
-            {
-              ...lastMessage,
-              content: data?.answer || "", // Replace content, don't append
-            },
-          ];
-        } else {
-          return [
-            ...prev,
-            {
-              content: data?.answer || "",
-              role: "assistant",
-              timestamp: new Date(),
-              displayName: "Assistant",
-            },
-          ];
-        }
+      setCurrentResponse({
+        content: data?.answer || "",
+        role: "assistant",
+        timestamp: new Date(),
+        displayName: "Assistant",
       });
     },
     onFinalData: async (data) => {
-      if (!currentSessionId) return;
+      const sessionId = currentSessionIdRef.current || crypto.randomUUID();
+      currentSessionIdRef.current = sessionId;
       await insertMessage(
         selectedUser?.user_id || "",
-        currentSessionId || "",
+        sessionId || "",
         data?.answer || "",
         "assistant"
       );
       await addZepMessage(
-        currentSessionId || "",
+        selectedUser?.user_id || "",
+        sessionId || "",
         data?.answer || "",
         "assistant",
         selectedUser?.name || null
       );
+      setCurrentResponse(null);
+      setMessages((prev) => {
+        return [
+          ...prev,
+          {
+            content: data?.answer || "",
+            role: "assistant",
+            timestamp: new Date(),
+            displayName: "Assistant",
+          },
+        ];
+      });
       setChatHistory((prev) => {
         const newChatHistory = [...prev];
         const chatIndex = newChatHistory.findIndex(
-          (chat) => chat.id === currentSessionId
+          (chat) => chat.id === sessionId
         );
         if (chatIndex !== -1) {
           const chat = { ...newChatHistory[chatIndex] };
@@ -179,6 +161,15 @@ export default function AdminChatInterface() {
           chat.timestamp = new Date();
           newChatHistory.splice(chatIndex, 1); // Remove from current position
           newChatHistory.unshift(chat); // Insert at the beginning
+        } else {
+          newChatHistory.unshift({
+            id: sessionId || "",
+            userName: selectedUser?.name || "",
+            userAvatar: selectedUser?.avatar || "",
+            userColor: selectedUser?.color || "",
+            lastMessage: data?.answer || "",
+            timestamp: new Date(),
+          });
         }
         return newChatHistory;
       });
@@ -202,18 +193,17 @@ export default function AdminChatInterface() {
       );
     },
     onFinalData: async (data) => {
-      const newSessionId = crypto.randomUUID();
-      setCurrentSessionId(newSessionId);
-      localStorage.setItem("currentSessionId", newSessionId);
+      const sessionId = crypto.randomUUID();
+      currentSessionIdRef.current = sessionId;
       await insertMessage(
         selectedUser?.user_id || "",
-        newSessionId || "",
+        sessionId || "",
         data || "",
         "assistant"
       );
-      await createZepSession(newSessionId || "");
       await addZepMessage(
-        newSessionId || "",
+        selectedUser?.user_id || "",
+        sessionId || "",
         data || "",
         "assistant",
         selectedUser?.name || null
@@ -222,7 +212,7 @@ export default function AdminChatInterface() {
         (prev) =>
           [
             {
-              id: newSessionId || "",
+              id: sessionId || "",
               userName: selectedUser?.name || "",
               userAvatar: selectedUser?.avatar || "",
               userColor: selectedUser?.color || "",
@@ -239,14 +229,15 @@ export default function AdminChatInterface() {
   const router = useRouter();
   const [selectedUser, setSelectedUser] = useState<ChatUser | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [instructions, setInstructions] = useState<string | null>(null);
+  const instructionsRef = useRef<string | null>(null);
   const [input, setInput] = useState("");
   const [currentSender, setCurrentSender] = useState<"developer" | "user">(
     "user"
   );
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
-  const [currentSessionId, setCurrentSessionId] = useState<string | null>(null);
+  const currentSessionIdRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentResponse, setCurrentResponse] = useState<Message | null>(null);
   const supabase = createClient();
   const [toast, setToast] = useState<{
     type: "success" | "error";
@@ -294,7 +285,7 @@ export default function AdminChatInterface() {
   };
   const initializeChat = async (user_id: string) => {
     await fetchInstructions().then((data) => {
-      setInstructions(data || "");
+      instructionsRef.current = data || "";
     });
     const influenceStyle = selectedUser?.influence_style;
     // const guidance_retrievals = await fetch("/api/llama/guidance", {
@@ -314,7 +305,12 @@ export default function AdminChatInterface() {
     //   influenceStyle || "",
     //   ""
     // );
-    initialMessageChat.mutate(instructions || "", "", influenceStyle || "", "");
+    initialMessageChat.mutate(
+      instructionsRef.current || "",
+      "",
+      influenceStyle || "",
+      ""
+    );
     return;
   };
   const fetchLatestSessionMessages = async () => {
@@ -394,8 +390,7 @@ export default function AdminChatInterface() {
             : "Assistant",
       }))
     );
-    setCurrentSessionId(sessionId);
-    localStorage.setItem("currentSessionId", sessionId);
+    currentSessionIdRef.current = sessionId;
   };
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -403,7 +398,7 @@ export default function AdminChatInterface() {
   useEffect(() => {
     if (!selectedUser) return;
     fetchInstructions().then((data) => {
-      setInstructions(data || "");
+      instructionsRef.current = data || "";
     });
     // const upsertZepUser = async () => {
     //   const response = await fetch("/api/zep/user", {
@@ -478,9 +473,11 @@ export default function AdminChatInterface() {
         displayName: currentSender === "user" ? selectedUser.name : "Admin",
       };
       setMessages((prev) => [...prev, userMessage]);
+      const newSessionId = currentSessionIdRef.current || crypto.randomUUID();
+      currentSessionIdRef.current = newSessionId;
       insertMessage(
         selectedUser?.user_id || "",
-        currentSessionId || "",
+        newSessionId || "",
         input,
         currentSender
       );
@@ -526,14 +523,13 @@ export default function AdminChatInterface() {
         return;
       }
       addZepMessage(
-        currentSessionId || "",
+        selectedUser?.user_id || "",
+        newSessionId || "",
         input,
         "user",
         selectedUser?.name || ""
       );
-      const zepMemoryContext = await getZepMemoryContext(
-        currentSessionId || ""
-      );
+      const zepMemoryContext = await getZepMemoryContext(newSessionId || "");
 
       // const userInfluenceStyle = selectedUser?.influenceStyle;
       // const feedbackQuery = `
@@ -586,7 +582,7 @@ export default function AdminChatInterface() {
       // `;
 
       betty.mutate(
-        instructions || "", // Can pass additional guidance here
+        instructionsRef.current || "", // Can pass additional guidance here
         [
           ...messages
             .filter((m) => m.role !== "developer")
@@ -637,8 +633,7 @@ export default function AdminChatInterface() {
 
   const handleBackToDashboard = () => {
     localStorage.removeItem("selectedUser");
-    localStorage.removeItem("currentSessionId");
-    router.push("/");
+    router.push("/admin");
   };
 
   const getMessageColor = (role: string) => {
@@ -748,7 +743,7 @@ export default function AdminChatInterface() {
               key={chat.id}
               className={`p-4 border-b border-gray-100 border-l-4 cursor-pointer transition-all duration-300
                 ${
-                  currentSessionId === chat.id
+                  currentSessionIdRef.current === chat.id
                     ? "border-l-[#92278F] !bg-[#f3e8fa]"
                     : "border-l-transparent hover:bg-[#f3e8fa] bg-white"
                 }
@@ -826,76 +821,155 @@ export default function AdminChatInterface() {
 
         {/* Messages Area */}
         <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 bg-gray-50">
-          {messages.map((message, index) => (
-            <div
-              key={index}
-              className={`flex space-x-3 ${
-                message.role === "assistant"
-                  ? "items-start"
-                  : "items-start justify-end"
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Avatar - show first for AI, last for Admin/User */}
-              {message.role === "assistant" && getAvatarForSender(message.role)}
-
-              <div
-                className={`flex flex-col ${
-                  message.role === "assistant" ? "items-start" : "items-end"
-                } max-w-[70%]`}
-              >
-                {/* Message bubble */}
+          {currentResponse
+            ? [...messages, currentResponse].map((message, index) => (
                 <div
-                  className={`px-4 py-3 rounded-2xl ${getMessageColor(
-                    message.role
-                  )} shadow-sm ${
+                  key={index}
+                  className={`flex space-x-3 ${
                     message.role === "assistant"
-                      ? "rounded-bl-md"
-                      : "rounded-br-md"
+                      ? "items-start"
+                      : "items-start justify-end"
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  {message.role === "assistant" ? (
-                    <ReactMarkdown
-                      components={{
-                        p: ({ children }) => (
-                          <p
-                            style={{
-                              whiteSpace: "pre-line",
-                              marginBottom: "1em",
-                            }}
-                          >
-                            {children}
-                          </p>
-                        ),
-                      }}
+                  {/* Avatar - show first for AI, last for Admin/User */}
+                  {message.role === "assistant" &&
+                    getAvatarForSender(message.role)}
+
+                  <div
+                    className={`flex flex-col ${
+                      message.role === "assistant" ? "items-start" : "items-end"
+                    } max-w-[70%]`}
+                  >
+                    {/* Message bubble */}
+                    <div
+                      className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                        message.role
+                      )} shadow-sm ${
+                        message.role === "assistant"
+                          ? "rounded-bl-md"
+                          : "rounded-br-md"
+                      }`}
                     >
-                      {message.content}
-                    </ReactMarkdown>
-                  ) : (
-                    <div className="whitespace-pre-wrap">{message.content}</div>
-                  )}
-                </div>
+                      {message.role === "assistant" ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p
+                                style={{
+                                  whiteSpace: "pre-line",
+                                  marginBottom: "1em",
+                                }}
+                              >
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
 
-                {/* Timestamp and role info */}
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500 font-inter">
-                    {formatTime(message.timestamp)}
-                  </span>
-                  {message.displayName && (
-                    <>
-                      <span className="text-xs text-gray-400">•</span>
+                    {/* Timestamp and role info */}
+                    <div className="flex items-center space-x-2 mt-1">
                       <span className="text-xs text-gray-500 font-inter">
-                        {message.displayName}
+                        {formatTime(message.timestamp)}
                       </span>
-                    </>
-                  )}
-                </div>
-              </div>
+                      {message.displayName && (
+                        <>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500 font-inter">
+                            {message.displayName}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Avatar - show last for Admin/User */}
-              {message.role !== "assistant" && getAvatarForSender(message.role)}
-            </div>
-          ))}
+                  {/* Avatar - show last for Admin/User */}
+                  {message.role !== "assistant" &&
+                    getAvatarForSender(message.role)}
+                </div>
+              ))
+            : messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex space-x-3 ${
+                    message.role === "assistant"
+                      ? "items-start"
+                      : "items-start justify-end"
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Avatar - show first for AI, last for Admin/User */}
+                  {message.role === "assistant" &&
+                    getAvatarForSender(message.role)}
+
+                  <div
+                    className={`flex flex-col ${
+                      message.role === "assistant" ? "items-start" : "items-end"
+                    } max-w-[70%]`}
+                  >
+                    {/* Message bubble */}
+                    <div
+                      className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                        message.role
+                      )} shadow-sm ${
+                        message.role === "assistant"
+                          ? "rounded-bl-md"
+                          : "rounded-br-md"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p
+                                style={{
+                                  whiteSpace: "pre-line",
+                                  marginBottom: "1em",
+                                }}
+                              >
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamp and role info */}
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-xs text-gray-500 font-inter">
+                        {formatTime(message.timestamp)}
+                      </span>
+                      {message.displayName && (
+                        <>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500 font-inter">
+                            {message.displayName}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Avatar - show last for Admin/User */}
+                  {message.role !== "assistant" &&
+                    getAvatarForSender(message.role)}
+                </div>
+              ))}
           <div ref={messagesEndRef} />
         </div>
 

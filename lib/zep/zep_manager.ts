@@ -65,14 +65,41 @@ class ZepManager {
         }
     }
 
-    public async createSession(userId: string, sessionId: string) {
+    public async upsertSession(userId: string, sessionId: string) {
         if (!this.client) throw new Error("Zep client not initialized");
+        let user = null;
         try {
-            const session = await this.client.memory.addSession({ sessionId: sessionId, userId: userId });
-            return session;
+            console.log("Getting Zep user", userId);
+            user = await this.client.user.get(userId);
+            console.log("Zep user", user);
+        } catch (error) {
+            console.error("Error getting user:", error);
+        }
+        try {
+            console.log("Zep user", user);
+            if (!user) {
+            console.log("Zep user not found, creating user", userId);
+                const newUser = await this.client.user.add({ userId: userId, email: "", firstName: "", lastName: "", metadata: {} });
+                console.log("Zep user created", newUser);
+            }
+        } catch (error) {
+            console.error("Error creating user:", error);
+        }
+        try {
+            const session = await this.client.memory.getSession(sessionId);
+            if (session) {
+                console.log("Zep session already exists", session);
+                return session;
+            }
+        } catch (error) {
+            console.error("Error getting session:", error);
+        }
+        try {
+            const newSession = await this.client.memory.addSession({ sessionId: sessionId, userId: userId });
+            console.log("Zep session created", newSession);
+            return newSession;
         } catch (error) {
             console.error("Error creating session:", error);
-            throw error;
         }
     }
 
