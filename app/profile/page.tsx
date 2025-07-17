@@ -230,6 +230,8 @@ export default function Profile() {
           first_name: firstName,
           last_name: lastName,
           full_name: `${firstName} ${lastName}`,
+          primary_influence_style: primaryStyle || null,
+          secondary_influence_style: secondaryStyle || null,
         },
       });
 
@@ -242,7 +244,6 @@ export default function Profile() {
         user_id: user.id,
         first_name: firstName,
         last_name: lastName,
-        user_name: userName,
         primary_influence_style: primaryStyle || null,
         secondary_influence_style: secondaryStyle || null,
       });
@@ -492,14 +493,6 @@ export default function Profile() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handleUpdateProfile} className="space-y-6">
-                {success && (
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
-                    <p className="text-sm text-green-700">
-                      Profile updated successfully!
-                    </p>
-                  </div>
-                )}
-
                 {/* Personal Information */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-gray-900 border-b border-gray-200 pb-2">
@@ -731,6 +724,13 @@ export default function Profile() {
                     </div>
                   )}
                 </Button>
+                {success && (
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <p className="text-sm text-green-700">
+                      Profile updated successfully!
+                    </p>
+                  </div>
+                )}
               </form>
             </CardContent>
           </Card>
