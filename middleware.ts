@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   // Define route access rules
   const adminRoutes = ["/admin", "/admin-chat"]
   const userRoutes = ["/chat", "/profile", "/subscription"]
-  const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error", "/auth/email-confirmed"]
+  const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error"]
   const paymentRoutes = ["/payment-setup", "/payment-success"]
   
   const isAdminRoute = adminRoutes.some(route => request.nextUrl.pathname.startsWith(route))
