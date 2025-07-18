@@ -37,7 +37,7 @@ export async function middleware(request: NextRequest) {
   // Define route access rules
   const adminRoutes = ["/admin", "/admin-chat"]
   const userRoutes = ["/chat", "/profile", "/subscription"]
-  const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error", "/auth/email-confirmed"]
+  const authRoutes = ["/auth/signin", "/auth/signup", "/auth/callback", "/auth/auth-code-error"]
   const paymentRoutes = ["/payment-setup", "/payment-success"]
   
   const isAdminRoute = adminRoutes.some(route => request.nextUrl.pathname.startsWith(route))
@@ -46,34 +46,6 @@ export async function middleware(request: NextRequest) {
   const isPaymentRoute = paymentRoutes.some(route => request.nextUrl.pathname.startsWith(route))
   const isProtectedRoute = isAdminRoute || isUserRoute || isPaymentRoute
 
-  // Restrict admin routes to admins only
-  if (user && isAdminRoute) {
-    try {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("is_admin")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!profile?.is_admin) {
-        const url = request.nextUrl.clone();
-        url.pathname = "/chat";
-        return NextResponse.redirect(url);
-      }
-    } catch (error) {
-      console.error("Error checking admin status:", error);
-      const url = request.nextUrl.clone();
-      url.pathname = "/chat";
-      return NextResponse.redirect(url);
-    }
-  }
-  // Redirect quiz to chat
-  if (user && request.nextUrl.pathname.startsWith("/quiz")) {
-    const url = request.nextUrl.clone();
-    url.pathname = "/chat";
-    return NextResponse.redirect(url);
-  }
-
   // If no user and trying to access protected routes, redirect to signin
   if (!user && isProtectedRoute) {
     const url = request.nextUrl.clone()
@@ -81,48 +53,123 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // If user is authenticated and trying to access auth routes, redirect to chat
+  // If user is authenticated and trying to access auth routes, redirect appropriately
   if (user && isAuthRoute) {
-    const url = request.nextUrl.clone()
-    url.pathname = "/chat"
-    return NextResponse.redirect(url)
-  }
-
-  // Check trial and subscription status for user routes (not admin routes)
-  if (user && isUserRoute) {
     try {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("subscription_status, trial_ended, is_admin, payment_method_added")
+        .select("is_admin")
         .eq("user_id", user.id)
-        .single()
+        .single();
 
-      // Skip trial/subscription checks for admin users
+      const url = request.nextUrl.clone()
       if (profile?.is_admin) {
-        return supabaseResponse
+        url.pathname = "/admin"
+      } else {
+        url.pathname = "/chat"
       }
-
-      // If user hasn't added payment method, redirect to payment setup
-      if (!profile?.payment_method_added) {
-        const url = request.nextUrl.clone()
-        url.pathname = "/payment-setup"
-        return NextResponse.redirect(url)
-      }
-
-      // Trial and subscription logic
-      if (
-        !profile?.subscription_status &&
-        profile?.trial_ended &&
-        !request.nextUrl.pathname.startsWith("/subscription")
-      ) {
-        // Only redirect if NOT already on the subscription page
-        const url = request.nextUrl.clone()
-        url.pathname = "/subscription"
-        url.searchParams.set("upgrade", "true")
-        return NextResponse.redirect(url)
-      }
+      return NextResponse.redirect(url)
     } catch (error) {
-      console.error("Error checking trial/subscription status:", error)
+      console.error("Error checking admin status:", error);
+      const url = request.nextUrl.clone()
+      url.pathname = "/chat"
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Check user's admin status for route access
+  if (user) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin, subscription_status, trial_ended, payment_method_added")
+        .eq("user_id", user.id)
+        .single();
+
+      const isAdmin = profile?.is_admin;
+
+      // Restrict admin routes to admins only
+      if (isAdminRoute && !isAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/chat";
+        return NextResponse.redirect(url);
+      }
+
+      // Restrict user routes to non-admins only
+      if (isUserRoute && isAdmin) {
+        const url = request.nextUrl.clone();
+        url.pathname = "/admin";
+        return NextResponse.redirect(url);
+      }
+
+      // Handle payment routes for non-admin users
+      if (isPaymentRoute && !isAdmin) {
+        // If user hasn't added payment method, allow access to payment setup
+        if (!profile?.payment_method_added && request.nextUrl.pathname.startsWith("/payment-setup")) {
+          return supabaseResponse;
+        }
+        
+        // If user has payment method, redirect to chat
+        if (profile?.payment_method_added && request.nextUrl.pathname.startsWith("/payment-setup")) {
+          const url = request.nextUrl.clone();
+          url.pathname = "/chat";
+          return NextResponse.redirect(url);
+        }
+      }
+
+      // Check trial and subscription status for non-admin users only
+      if (isUserRoute && !isAdmin) {
+        // If user hasn't added payment method, redirect to payment setup
+        if (!profile?.payment_method_added) {
+          const url = request.nextUrl.clone()
+          url.pathname = "/payment-setup"
+          return NextResponse.redirect(url)
+        }
+
+        // Trial and subscription logic
+        if (
+          !profile?.subscription_status &&
+          profile?.trial_ended &&
+          !request.nextUrl.pathname.startsWith("/subscription")
+        ) {
+          // Only redirect if NOT already on the subscription page
+          const url = request.nextUrl.clone()
+          url.pathname = "/subscription"
+          url.searchParams.set("upgrade", "true")
+          return NextResponse.redirect(url)
+        }
+      }
+
+    } catch (error) {
+      console.error("Error checking user status:", error)
+      // On error, redirect to signin for safety
+      const url = request.nextUrl.clone()
+      url.pathname = "/auth/signin"
+      return NextResponse.redirect(url)
+    }
+  }
+
+  // Redirect quiz to appropriate page based on user type
+  if (user && request.nextUrl.pathname.startsWith("/quiz")) {
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("is_admin")
+        .eq("user_id", user.id)
+        .single();
+
+      const url = request.nextUrl.clone();
+      if (profile?.is_admin) {
+        url.pathname = "/admin";
+      } else {
+        url.pathname = "/chat";
+      }
+      return NextResponse.redirect(url);
+    } catch (error) {
+      console.error("Error checking admin status for quiz redirect:", error);
+      const url = request.nextUrl.clone();
+      url.pathname = "/chat";
+      return NextResponse.redirect(url);
     }
   }
 

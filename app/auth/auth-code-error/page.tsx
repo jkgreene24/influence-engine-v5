@@ -2,9 +2,12 @@
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Home, LogIn } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function AuthCodeError() {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
@@ -22,16 +25,18 @@ export default function AuthCodeError() {
             </p>
             <div className="space-y-3">
               <Button
-                onClick={() => (window.location.href = "/auth/signin")}
-                className="w-full bg-[#92278F] hover:bg-[#7a1f78]"
+                onClick={() => router.push("/auth/signin")}
+                className="w-full bg-[#92278F] hover:bg-[#7a1f78] text-white"
               >
-                Try Signing In Again
+                <LogIn className="w-4 h-4 mr-2" />
+                Sign In Again
               </Button>
               <Button
-                onClick={() => (window.location.href = "/")}
                 variant="outline"
-                className="w-full"
+                onClick={() => router.push("/")}
+                className="w-full border-[#92278F] text-[#92278F] hover:bg-[#92278F] hover:text-white"
               >
+                <Home className="w-4 h-4 mr-2" />
                 Back to Home
               </Button>
             </div>

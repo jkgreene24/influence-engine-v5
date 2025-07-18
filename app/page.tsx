@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
 import {
   MessageCircle,
   Zap,
@@ -18,9 +19,10 @@ import {
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function Dashboard() {
+export default function Home() {
   const [isHovered, setIsHovered] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const router = useRouter();
 
   useEffect(() => {
     const supabase = createClient();
@@ -175,7 +177,7 @@ export default function Dashboard() {
                 Contact
               </a>
               <Button
-                onClick={() => (window.location.href = "/auth/signin")}
+                onClick={() => router.push("/auth/signin")}
                 className="bg-[#92278F] hover:bg-[#7a1f78] text-white font-medium"
               >
                 {user ? (
@@ -218,7 +220,7 @@ export default function Dashboard() {
                 className="bg-white text-[#92278F] hover:bg-white/95 text-lg px-10 py-4 font-semibold tracking-wide flex items-center space-x-3 shadow-lg"
                 onMouseEnter={() => setIsHovered(true)}
                 onMouseLeave={() => setIsHovered(false)}
-                onClick={() => (window.location.href = "/quiz")}
+                onClick={() => router.push("/quiz")}
               >
                 <Play className="w-5 h-5" />
                 <span>Take the Style Quiz to Begin</span>
@@ -230,7 +232,7 @@ export default function Dashboard() {
               </Button>
               <Button
                 size="lg"
-                onClick={() => (window.location.href = "/chat")}
+                onClick={() => router.push("/chat")}
                 variant="outline"
                 className="border-2 border-white text-white hover:bg-white hover:text-[#92278F] text-lg px-10 py-4 bg-transparent font-semibold tracking-wide"
               >
@@ -418,7 +420,7 @@ export default function Dashboard() {
                   trial.
                 </p>
                 <Button
-                  onClick={() => (window.location.href = "/quiz")}
+                  onClick={() => router.push("/quiz")}
                   className="bg-[#92278F] hover:bg-[#7a1f78] text-white text-lg px-10 py-4 font-semibold tracking-wide"
                 >
                   Start Free Trial
@@ -472,13 +474,13 @@ export default function Dashboard() {
             <Button
               size="lg"
               className="bg-white text-[#92278F] hover:bg-white/95 text-lg px-10 py-4 font-semibold tracking-wide"
-              onClick={() => (window.location.href = "/quiz")}
+              onClick={() => router.push("/quiz")}
             >
               Take the Style Quiz Now
             </Button>
             <Button
               size="lg"
-              onClick={() => (window.location.href = "/chat")}
+              onClick={() => router.push("/chat")}
               variant="outline"
               className="border-2 border-white text-white hover:bg-white hover:text-[#92278F] text-lg px-10 py-4 bg-transparent font-semibold tracking-wide"
             >

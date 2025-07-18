@@ -8,9 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Eye, EyeOff, LogIn, Mail, Lock } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const supabase = createClient();
+  const router = useRouter();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -65,6 +67,20 @@ export default function SignIn() {
       } else {
         // Redirect to dashboard or chat
         const profile = await upsertUserProfile(data.user);
+        const zepResponse = await fetch("/api/zep/user", {
+          method: "POST",
+          body: JSON.stringify({
+            userId: data.user?.id,
+            email: email,
+            first_name: profile?.first_name,
+            last_name: profile?.last_name,
+            metadata: {
+              primary_influence_style: profile?.primary_influence_style,
+              secondary_influence_style: profile?.secondary_influence_style,
+            },
+          }),
+        });
+        console.log("Zep response for signin:", zepResponse);
         if (profile.is_admin) {
           window.location.href = "/admin";
         } else {
@@ -85,7 +101,7 @@ export default function SignIn() {
         <div className="text-center">
           <Button
             variant="ghost"
-            onClick={() => (window.location.href = "/")}
+            onClick={() => router.push("/")}
             className="mb-6 text-gray-600 hover:text-[#92278F]"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />

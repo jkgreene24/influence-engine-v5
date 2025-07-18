@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { useRouter } from "next/navigation";
 import {
   CheckCircle,
   Zap,
@@ -49,6 +50,7 @@ const getInfluenceIcon = (style: string) => {
 export default function PaymentSuccess() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -139,7 +141,7 @@ export default function PaymentSuccess() {
             )}
 
             <Button
-              onClick={() => (window.location.href = "/chat")}
+              onClick={() => router.push("/chat")}
               className="bg-[#92278F] hover:bg-[#7a1f78] text-white"
             >
               Start Chatting
