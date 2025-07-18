@@ -32,6 +32,19 @@ export default function EmailConfirmed() {
         } = await supabase.auth.getUser();
 
         if (user) {
+          await fetch("/api/zep/user", {
+            method: "POST",
+            body: JSON.stringify({
+              userId: user.id,
+              email: user.email,
+              first_name: profile?.first_name,
+              last_name: profile?.last_name,
+              metadata: {
+                primary_influence_style: profile?.primary_influence_style,
+                secondary_influence_style: profile?.secondary_influence_style,
+              },
+            }),
+          });
           const { data: profileData } = await supabase
             .from("profiles")
             .select("stripe_customer_id, payment_method_added")
