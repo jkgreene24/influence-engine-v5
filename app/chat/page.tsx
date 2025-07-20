@@ -225,6 +225,7 @@ export default function ChatInterface() {
       );
     },
     onFinalData: async (data) => {
+      setIsNewChatLoading(false);
       const sessionId = crypto.randomUUID();
       currentSessionIdRef.current = sessionId;
       await insertMessage(
@@ -266,6 +267,7 @@ export default function ChatInterface() {
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const currentSessionIdRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNewChatLoading, setIsNewChatLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState<Message | null>(null);
   const supabase = createClient();
   const [toast, setToast] = useState<{
@@ -307,6 +309,7 @@ export default function ChatInterface() {
     return data;
   };
   const handleNewChat = async () => {
+    setIsNewChatLoading(true);
     setMessages([]);
     if (user) {
       await initializeChat(user.user_id);
@@ -695,7 +698,7 @@ export default function ChatInterface() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex">
+    <div className="h-screen bg-white flex">
       {/* Chat History Sidebar */}
       <div className="w-80 bg-gray-100 border-r border-gray-200 flex flex-col">
         {/* Sidebar Header */}
@@ -711,11 +714,16 @@ export default function ChatInterface() {
               Home
             </Button>
             <Button
+              onClick={() => handleNewChat()}
               variant="ghost"
               size="sm"
               className="text-gray-600 hover:text-[#92278F] p-2"
             >
-              <Plus className="w-4 h-4" />
+              {isNewChatLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
             </Button>
           </div>
           <h2 className="font-playfair text-lg font-bold text-gray-800">
@@ -842,60 +850,157 @@ export default function ChatInterface() {
         </div>
 
         {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-100">
-          {messages.map((message, index) => (
-            <div
-              key={message.timestamp.toISOString()}
-              className={`flex space-x-3 animate-in slide-in-from-bottom-2 duration-300 ${
-                message.role === "assistant"
-                  ? "items-start"
-                  : "items-start justify-end"
-              }`}
-              style={{ animationDelay: `${index * 100}ms` }}
-            >
-              {/* Avatar - show first for AI, last for User */}
-              {message.role === "assistant" && getAvatarForSender(message.role)}
-
-              <div
-                className={`flex flex-col ${
-                  message.role === "assistant" ? "items-start" : "items-end"
-                } max-w-[70%]`}
-              >
-                {/* Message bubble */}
+        <div className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4 bg-gray-100">
+          {currentResponse
+            ? [...messages, currentResponse].map((message, index) => (
                 <div
-                  className={`px-4 py-3 rounded-2xl ${getMessageColor(
-                    message.role
-                  )} shadow-sm ${
+                  key={index}
+                  className={`flex space-x-3 ${
                     message.role === "assistant"
-                      ? "rounded-bl-md"
-                      : "rounded-br-md"
+                      ? "items-start"
+                      : "items-start justify-end"
                   }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
                 >
-                  <p className="font-inter text-sm leading-relaxed">
-                    {message.content}
-                  </p>
-                </div>
+                  {/* Avatar - show first for AI, last for Admin/User */}
+                  {message.role === "assistant" &&
+                    getAvatarForSender(message.role)}
 
-                {/* Timestamp and sender info */}
-                <div className="flex items-center space-x-2 mt-1">
-                  <span className="text-xs text-gray-500 font-inter">
-                    {formatTime(message.timestamp)}
-                  </span>
-                  {message.displayName && (
-                    <>
-                      <span className="text-xs text-gray-400">•</span>
+                  <div
+                    className={`flex flex-col ${
+                      message.role === "assistant" ? "items-start" : "items-end"
+                    } max-w-[70%]`}
+                  >
+                    {/* Message bubble */}
+                    <div
+                      className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                        message.role
+                      )} shadow-sm ${
+                        message.role === "assistant"
+                          ? "rounded-bl-md"
+                          : "rounded-br-md"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p
+                                style={{
+                                  whiteSpace: "pre-line",
+                                  marginBottom: "1em",
+                                }}
+                              >
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamp and role info */}
+                    <div className="flex items-center space-x-2 mt-1">
                       <span className="text-xs text-gray-500 font-inter">
-                        {message.displayName}
+                        {formatTime(message.timestamp)}
                       </span>
-                    </>
-                  )}
-                </div>
-              </div>
+                      {message.displayName && (
+                        <>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500 font-inter">
+                            {message.displayName}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
 
-              {/* Avatar - show last for User */}
-              {message.role !== "assistant" && getAvatarForSender(message.role)}
-            </div>
-          ))}
+                  {/* Avatar - show last for Admin/User */}
+                  {message.role !== "assistant" &&
+                    getAvatarForSender(message.role)}
+                </div>
+              ))
+            : messages.map((message, index) => (
+                <div
+                  key={index}
+                  className={`flex space-x-3 ${
+                    message.role === "assistant"
+                      ? "items-start"
+                      : "items-start justify-end"
+                  }`}
+                  style={{ animationDelay: `${index * 100}ms` }}
+                >
+                  {/* Avatar - show first for AI, last for Admin/User */}
+                  {message.role === "assistant" &&
+                    getAvatarForSender(message.role)}
+
+                  <div
+                    className={`flex flex-col ${
+                      message.role === "assistant" ? "items-start" : "items-end"
+                    } max-w-[70%]`}
+                  >
+                    {/* Message bubble */}
+                    <div
+                      className={`px-4 py-3 rounded-2xl ${getMessageColor(
+                        message.role
+                      )} shadow-sm ${
+                        message.role === "assistant"
+                          ? "rounded-bl-md"
+                          : "rounded-br-md"
+                      }`}
+                    >
+                      {message.role === "assistant" ? (
+                        <ReactMarkdown
+                          components={{
+                            p: ({ children }) => (
+                              <p
+                                style={{
+                                  whiteSpace: "pre-line",
+                                  marginBottom: "1em",
+                                }}
+                              >
+                                {children}
+                              </p>
+                            ),
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      ) : (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Timestamp and role info */}
+                    <div className="flex items-center space-x-2 mt-1">
+                      <span className="text-xs text-gray-500 font-inter">
+                        {formatTime(message.timestamp)}
+                      </span>
+                      {message.displayName && (
+                        <>
+                          <span className="text-xs text-gray-400">•</span>
+                          <span className="text-xs text-gray-500 font-inter">
+                            {message.displayName}
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Avatar - show last for Admin/User */}
+                  {message.role !== "assistant" &&
+                    getAvatarForSender(message.role)}
+                </div>
+              ))}
+          <div ref={messagesEndRef} />
         </div>
 
         {/* Message Input Area */}
