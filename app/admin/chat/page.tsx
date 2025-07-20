@@ -193,6 +193,7 @@ export default function AdminChatInterface() {
       );
     },
     onFinalData: async (data) => {
+      setIsNewChatLoading(false);
       const sessionId = crypto.randomUUID();
       currentSessionIdRef.current = sessionId;
       await insertMessage(
@@ -237,6 +238,7 @@ export default function AdminChatInterface() {
   const [chatHistory, setChatHistory] = useState<ChatHistory[]>([]);
   const currentSessionIdRef = useRef<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isNewChatLoading, setIsNewChatLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState<Message | null>(null);
   const supabase = createClient();
   const [toast, setToast] = useState<{
@@ -278,6 +280,7 @@ export default function AdminChatInterface() {
     return data;
   };
   const handleNewChat = async () => {
+    setIsNewChatLoading(true);
     setMessages([]);
     if (selectedUser) {
       await initializeChat(selectedUser.user_id);
@@ -728,7 +731,11 @@ export default function AdminChatInterface() {
               size="sm"
               className="text-gray-600 hover:text-[#92278F] p-2"
             >
-              <Plus className="w-4 h-4" />
+              {isNewChatLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Plus className="w-4 h-4" />
+              )}
             </Button>
           </div>
           <h2 className="font-playfair text-lg font-bold text-gray-800">
