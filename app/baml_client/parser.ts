@@ -32,6 +32,7 @@ export class LlmResponseParser {
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): ResponseChat {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.parseLlmResponse(
         "Betty",
         llmResponse,
@@ -39,6 +40,7 @@ export class LlmResponseParser {
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
+        env,
       ) as ResponseChat
     } catch (error) {
       throw toBamlError(error);
@@ -50,6 +52,7 @@ export class LlmResponseParser {
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): string {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.parseLlmResponse(
         "InitialMessageChat",
         llmResponse,
@@ -57,6 +60,7 @@ export class LlmResponseParser {
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
+        env,
       ) as string
     } catch (error) {
       throw toBamlError(error);
@@ -74,6 +78,7 @@ export class LlmStreamParser {
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): partial_types.ResponseChat {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.parseLlmResponse(
         "Betty",
         llmResponse,
@@ -81,6 +86,7 @@ export class LlmStreamParser {
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
+        env,
       ) as partial_types.ResponseChat
     } catch (error) {
       throw toBamlError(error);
@@ -92,6 +98,7 @@ export class LlmStreamParser {
       __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry }
   ): string {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.parseLlmResponse(
         "InitialMessageChat",
         llmResponse,
@@ -99,6 +106,7 @@ export class LlmStreamParser {
         this.ctxManager.cloneContext(),
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
+        env,
       ) as string
     } catch (error) {
       throw toBamlError(error);

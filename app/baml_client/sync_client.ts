@@ -38,6 +38,7 @@ type BamlCallOptions = {
   tb?: TypeBuilder
   clientRegistry?: ClientRegistry
   collector?: Collector | Collector[]
+  env?: Record<string, string | undefined>
 }
 
 export class BamlSyncClient {
@@ -92,6 +93,7 @@ export class BamlSyncClient {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = this.runtime.callFunctionSync(
         "Betty",
         {
@@ -101,6 +103,7 @@ export class BamlSyncClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return raw.parsed(false) as ResponseChat
     } catch (error: any) {
@@ -115,6 +118,7 @@ export class BamlSyncClient {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = this.runtime.callFunctionSync(
         "InitialMessageChat",
         {
@@ -124,6 +128,7 @@ export class BamlSyncClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return raw.parsed(false) as string
     } catch (error: any) {

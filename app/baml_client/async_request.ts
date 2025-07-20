@@ -25,6 +25,7 @@ import type TypeBuilder from "./type_builder"
 type BamlCallOptions = {
   tb?: TypeBuilder
   clientRegistry?: ClientRegistry
+  env?: Record<string, string | undefined>
 }
 
 export class AsyncHttpRequest {
@@ -36,6 +37,7 @@ export class AsyncHttpRequest {
       __baml_options__?: BamlCallOptions
   ): Promise<HTTPRequest> {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return await this.runtime.buildRequest(
         "Betty",
         {
@@ -45,6 +47,7 @@ export class AsyncHttpRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         false,
+        env
       )
     } catch (error) {
       throw toBamlError(error);
@@ -56,6 +59,7 @@ export class AsyncHttpRequest {
       __baml_options__?: BamlCallOptions
   ): Promise<HTTPRequest> {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return await this.runtime.buildRequest(
         "InitialMessageChat",
         {
@@ -65,6 +69,7 @@ export class AsyncHttpRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         false,
+        env
       )
     } catch (error) {
       throw toBamlError(error);
@@ -82,6 +87,7 @@ export class AsyncHttpStreamRequest {
       __baml_options__?: BamlCallOptions
   ): Promise<HTTPRequest> {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return await this.runtime.buildRequest(
         "Betty",
         {
@@ -91,6 +97,7 @@ export class AsyncHttpStreamRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         true,
+        env
       )
     } catch (error) {
       throw toBamlError(error);
@@ -102,6 +109,7 @@ export class AsyncHttpStreamRequest {
       __baml_options__?: BamlCallOptions
   ): Promise<HTTPRequest> {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return await this.runtime.buildRequest(
         "InitialMessageChat",
         {
@@ -111,6 +119,7 @@ export class AsyncHttpStreamRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         true,
+        env
       )
     } catch (error) {
       throw toBamlError(error);

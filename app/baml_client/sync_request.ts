@@ -25,6 +25,7 @@ import type TypeBuilder from "./type_builder"
 type BamlCallOptions = {
   tb?: TypeBuilder
   clientRegistry?: ClientRegistry
+  env?: Record<string, string | undefined>
 }
 
 export class HttpRequest {
@@ -36,6 +37,7 @@ export class HttpRequest {
       __baml_options__?: BamlCallOptions
   ): HTTPRequest {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.buildRequestSync(
         "Betty",
         {
@@ -45,6 +47,7 @@ export class HttpRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         false,
+        env,
       )
     } catch (error) {
       throw toBamlError(error);
@@ -56,6 +59,7 @@ export class HttpRequest {
       __baml_options__?: BamlCallOptions
   ): HTTPRequest {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.buildRequestSync(
         "InitialMessageChat",
         {
@@ -65,6 +69,7 @@ export class HttpRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         false,
+        env,
       )
     } catch (error) {
       throw toBamlError(error);
@@ -82,6 +87,7 @@ export class HttpStreamRequest {
       __baml_options__?: BamlCallOptions
   ): HTTPRequest {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.buildRequestSync(
         "Betty",
         {
@@ -91,6 +97,7 @@ export class HttpStreamRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         true,
+        env,
       )
     } catch (error) {
       throw toBamlError(error);
@@ -102,6 +109,7 @@ export class HttpStreamRequest {
       __baml_options__?: BamlCallOptions
   ): HTTPRequest {
     try {
+      const env = __baml_options__?.env ? { ...process.env, ...__baml_options__.env } : { ...process.env };
       return this.runtime.buildRequestSync(
         "InitialMessageChat",
         {
@@ -111,6 +119,7 @@ export class HttpStreamRequest {
         __baml_options__?.tb?.__tb(),
         __baml_options__?.clientRegistry,
         true,
+        env,
       )
     } catch (error) {
       throw toBamlError(error);

@@ -35,6 +35,7 @@ type BamlCallOptions = {
   tb?: TypeBuilder
   clientRegistry?: ClientRegistry
   collector?: Collector | Collector[]
+  env?: Record<string, string | undefined>
 }
 
 export class BamlAsyncClient {
@@ -90,6 +91,7 @@ export class BamlAsyncClient {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = await this.runtime.callFunction(
         "Betty",
         {
@@ -99,6 +101,7 @@ export class BamlAsyncClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return raw.parsed(false) as ResponseChat
     } catch (error) {
@@ -113,6 +116,7 @@ export class BamlAsyncClient {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = await this.runtime.callFunction(
         "InitialMessageChat",
         {
@@ -122,6 +126,7 @@ export class BamlAsyncClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return raw.parsed(false) as string
     } catch (error) {
@@ -139,17 +144,18 @@ class BamlStreamClient {
   constructor(runtime: BamlRuntime, ctxManager: BamlCtxManager, bamlOptions?: BamlCallOptions) {
     this.runtime = runtime
     this.ctxManager = ctxManager
-    this.bamlOptions = bamlOptions || {}
+    this.bamlOptions = bamlOptions || { env: { ...process.env } }
   }
 
   
   Betty(
       instruction: string,messages: Message[],relevant_feedbacks: string,user_metadata: UserMetadata,user_memory: string,
-      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry, collector?: Collector | Collector[] }
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry, collector?: Collector | Collector[], env?: Record<string, string | undefined> }
   ): BamlStream<partial_types.ResponseChat, ResponseChat> {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = this.runtime.streamFunction(
         "Betty",
         {
@@ -160,6 +166,7 @@ class BamlStreamClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return new BamlStream<partial_types.ResponseChat, ResponseChat>(
         raw,
@@ -174,11 +181,12 @@ class BamlStreamClient {
   
   InitialMessageChat(
       instruction: string,relevant_feedbacks: string,user_influence_style: string,user_memory: string,
-      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry, collector?: Collector | Collector[] }
+      __baml_options__?: { tb?: TypeBuilder, clientRegistry?: ClientRegistry, collector?: Collector | Collector[], env?: Record<string, string | undefined> }
   ): BamlStream<string, string> {
     try {
       const options = { ...this.bamlOptions, ...(__baml_options__ || {}) }
       const collector = options.collector ? (Array.isArray(options.collector) ? options.collector : [options.collector]) : [];
+      const env = options.env ? { ...process.env, ...options.env } : { ...process.env };
       const raw = this.runtime.streamFunction(
         "InitialMessageChat",
         {
@@ -189,6 +197,7 @@ class BamlStreamClient {
         options.tb?.__tb(),
         options.clientRegistry,
         collector,
+        env,
       )
       return new BamlStream<string, string>(
         raw,
