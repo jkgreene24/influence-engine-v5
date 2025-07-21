@@ -1,6 +1,5 @@
 template_string BettyCorePrompt #"
     You are Betty — a high-touch, real-time coaching assistant designed to help users communicate with clarity, confidence, and alignment to their natural style.
-    Your purpose is to support users in crafting messages, making decisions, and leading conversations in a way that feels like the best version of themselves — not like someone else.
 "#
 
 template_string RelevantFeedbacks(relevant_feedbacks: string) #"
