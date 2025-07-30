@@ -15,6 +15,7 @@ interface QuizQuestion {
     text: string
     styles: string[]
     route?: string
+    followUp?: string
   }[]
 }
 
@@ -25,11 +26,12 @@ interface QuizResult {
 }
 
 interface QuizState {
-  step: "entry" | "path" | "tiebreaker" | "result"
+  step: "entry" | "path" | "blend" | "confirmation" | "result"
   questionIndex: number
   selectedPath: string
   answers: Record<string, string>
-  needsTiebreaker: boolean
+  needsBlend: boolean
+  needsConfirmation: boolean
 }
 
 const entryQuestions: QuizQuestion[] = [
@@ -49,6 +51,12 @@ const entryQuestions: QuizQuestion[] = [
         text: "I create emotional safety and strong human connection.",
         styles: ["diplomat", "connector"],
         route: "relationship",
+      },
+      {
+        id: "D",
+        text: "Honestly? A mix of two or more of these.",
+        styles: ["mixed"],
+        route: "blend",
       },
     ],
   },
@@ -81,25 +89,34 @@ const pathQuestions = {
       answers: [
         { id: "A", text: "Inject energy and urgency to move it forward.", styles: ["catalyst"] },
         { id: "B", text: "Talk to people and get everyone back on the same page.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "fp1-alt" },
+      ],
+    },
+    {
+      id: "fp1-alt",
+      question: "When things stall out, what feels most natural to you?",
+      answers: [
+        { id: "A", text: "Providing structure and calm", styles: ["anchor"] },
+        { id: "B", text: "Holding space and emotional safety", styles: ["diplomat"] },
+        { id: "C", text: "Framing the big picture", styles: ["navigator"] },
       ],
     },
     {
       id: "fp2",
-      question: "I'm most likely to build influence by:",
+      question: "When facing pressure or conflict, I usually:",
       answers: [
-        { id: "A", text: "Taking bold, decisive action.", styles: ["catalyst"] },
-        { id: "B", text: "Building relationships and shared understanding.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "Get everyone communicating again", styles: ["connector"] },
+        { id: "B", text: "Push through with urgency to keep moving", styles: ["catalyst"] },
+        { id: "C", text: "Pause to check on emotional temperature", styles: ["diplomat"] },
       ],
     },
     {
       id: "fp3",
-      question: "I measure success by:",
+      question: "What drives your sense of urgency the most?",
       answers: [
-        { id: "A", text: "How much progress we've made.", styles: ["catalyst"] },
-        { id: "B", text: "How aligned and connected people feel.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "The fear of missing opportunity", styles: ["catalyst"] },
+        { id: "B", text: "Seeing people feel disconnected or lost", styles: ["connector"] },
+        { id: "C", text: "Wanting to make sure it's truly the right time", styles: ["anchor", "navigator"] },
       ],
     },
   ],
@@ -110,25 +127,34 @@ const pathQuestions = {
       answers: [
         { id: "A", text: "Break it into steps and stabilize it.", styles: ["anchor"] },
         { id: "B", text: "Step back and look at long-term impacts.", styles: ["navigator"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "st1-alt" },
+      ],
+    },
+    {
+      id: "st1-alt",
+      question: "In complex situations, what feels more natural to you?",
+      answers: [
+        { id: "A", text: "Sparking energy and action", styles: ["catalyst"] },
+        { id: "B", text: "Holding space and emotional safety", styles: ["diplomat"] },
+        { id: "C", text: "Creating clarity and unity", styles: ["connector"] },
       ],
     },
     {
       id: "st2",
-      question: "People often describe me as:",
+      question: "What creates confidence for you in a messy situation?",
       answers: [
-        { id: "A", text: "Reliable and grounded.", styles: ["anchor"] },
-        { id: "B", text: "Strategic and insightful.", styles: ["navigator"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "Having a steady, practical plan", styles: ["anchor"] },
+        { id: "B", text: "Reconnecting to the bigger vision", styles: ["navigator"] },
+        { id: "C", text: "Making sure everyone's aligned emotionally", styles: ["diplomat"] },
       ],
     },
     {
       id: "st3",
-      question: "When things go off track, I:",
+      question: "How do you usually prevent breakdowns?",
       answers: [
-        { id: "A", text: "Create structure and bring consistency.", styles: ["anchor"] },
-        { id: "B", text: "Recheck for alignment with the long-term goal.", styles: ["navigator"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "By mapping out potential risks and blockers", styles: ["navigator"] },
+        { id: "B", text: "By putting the right systems in place early", styles: ["anchor"] },
+        { id: "C", text: "By keeping people talking and collaborating", styles: ["connector"] },
       ],
     },
   ],
@@ -137,31 +163,97 @@ const pathQuestions = {
       id: "rel1",
       question: "My default way of helping is:",
       answers: [
-        { id: "A", text: "Listening and tuning into their emotions.", styles: ["diplomat"] },
-        { id: "B", text: "Clarifying and building understanding across people.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "Listening and tuning into emotions.", styles: ["diplomat"] },
+        { id: "B", text: "Clarifying and building shared understanding.", styles: ["connector"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "rel1-alt" },
+      ],
+    },
+    {
+      id: "rel1-alt",
+      question: "When someone needs help, what's your natural instinct?",
+      answers: [
+        { id: "A", text: "Providing structure and calm", styles: ["anchor"] },
+        { id: "B", text: "Sparking action or momentum", styles: ["catalyst"] },
+        { id: "C", text: "Framing a longer-term vision", styles: ["navigator"] },
       ],
     },
     {
       id: "rel2",
-      question: "In tense conversations, I usually:",
+      question: "When others are tense or struggling, I naturally:",
       answers: [
-        { id: "A", text: "Validate how people feel and hold space.", styles: ["diplomat"] },
-        { id: "B", text: "Translate misunderstandings and restore connection.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "Hold space and make them feel safe", styles: ["diplomat"] },
+        { id: "B", text: "Get people realigned and working together again", styles: ["connector"] },
+        { id: "C", text: "Offer a practical next step", styles: ["anchor"] },
       ],
     },
     {
       id: "rel3",
-      question: "I feel most effective when:",
+      question: "What matters most to you when resolving issues?",
       answers: [
-        { id: "A", text: "People feel emotionally safe and seen.", styles: ["diplomat"] },
-        { id: "B", text: "Everyone is aligned and moving together.", styles: ["connector"] },
-        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"] },
+        { id: "A", text: "Emotional harmony", styles: ["diplomat"] },
+        { id: "B", text: "Shared clarity", styles: ["connector"] },
+        { id: "C", text: "Getting a clear plan and process", styles: ["anchor", "navigator"] },
       ],
     },
   ],
 }
+
+const blendQuestions = [
+  {
+    id: "blend1",
+    question: "You tend to blend energy and depth. When you're under pressure, what shows up first?",
+    answers: [
+      { id: "A", text: "You spring into action", styles: ["catalyst"] },
+      { id: "B", text: "You emotionally anchor and hold space", styles: ["diplomat"] },
+      { id: "C", text: "You try to reconnect the group", styles: ["connector"] },
+    ],
+  },
+  {
+    id: "blend2",
+    question: "Which feels more natural, even if you do both?",
+    answers: [
+      { id: "A", text: "Driving change and initiating movement", styles: ["catalyst", "navigator"] },
+      { id: "B", text: "Building emotional trust and psychological safety", styles: ["diplomat", "connector"] },
+      { id: "C", text: "Creating order and planning for success", styles: ["anchor"] },
+    ],
+  },
+]
+
+const confirmationQuestions = [
+  {
+    id: "confirm1",
+    question: "People often describe me as:",
+    answers: [
+      { id: "A", text: "Bold and energizing", styles: ["catalyst"] },
+      { id: "B", text: "Strategic and insightful", styles: ["navigator"] },
+      { id: "C", text: "Empathetic and emotionally present", styles: ["diplomat"] },
+      { id: "D", text: "Calm and dependable", styles: ["anchor"] },
+      { id: "E", text: "Collaborative and connective", styles: ["connector"] },
+    ],
+  },
+  {
+    id: "confirm2",
+    question: "When I'm leading, I care most about:",
+    answers: [
+      { id: "A", text: "Getting things done quickly", styles: ["catalyst"] },
+      { id: "B", text: "Making sure people feel safe and seen", styles: ["diplomat"] },
+      { id: "C", text: "Long-term vision and impact", styles: ["navigator"] },
+      { id: "D", text: "A clean plan and reliable process", styles: ["anchor"] },
+      { id: "E", text: "Everyone feeling aligned and involved", styles: ["connector"] },
+    ],
+  },
+  {
+    id: "confirm3",
+    question: "My biggest influence strength is:",
+    answers: [
+      { id: "A", text: "Driving action", styles: ["catalyst"] },
+      { id: "B", text: "Emotional presence", styles: ["diplomat"] },
+      { id: "C", text: "Strategic vision", styles: ["navigator"] },
+      { id: "D", text: "Steady structure", styles: ["anchor"] },
+      { id: "E", text: "Unifying people", styles: ["connector"] },
+    ],
+  },
+]
 
 const tiebreakerQuestions = [
   {
@@ -291,12 +383,19 @@ const getStepInfo = (step: string, path?: string) => {
           pathDescriptions[path as keyof typeof pathDescriptions] || "Let's explore your specific style patterns.",
         color: "from-blue-600 to-indigo-600",
       }
-    case "tiebreaker":
+    case "blend":
       return {
-        title: "Step 3: Final Calibration",
-        subtitle: "Just a couple more questions to clarify your style",
-        description: "These questions help us determine if you have a blended style or a single dominant pattern.",
+        title: "Step 3: Blend Clarification",
+        subtitle: "Let's clarify your blended approach",
+        description: "You tend to blend different styles. Let's understand which combinations feel most natural to you.",
         color: "from-green-600 to-emerald-600",
+      }
+    case "confirmation":
+      return {
+        title: "Step 4: Style Confirmation",
+        subtitle: "Final questions to confirm your style",
+        description: "These questions help us finalize your influence style profile and ensure accuracy.",
+        color: "from-purple-600 to-indigo-600",
       }
     default:
       return {
@@ -309,13 +408,14 @@ const getStepInfo = (step: string, path?: string) => {
 }
 
 export default function QuickQuiz() {
-  const [currentStep, setCurrentStep] = useState<"entry" | "path" | "tiebreaker" | "result">("entry")
+  const [currentStep, setCurrentStep] = useState<"entry" | "path" | "blend" | "confirmation" | "result">("entry")
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0)
   const [selectedPath, setSelectedPath] = useState<string>("")
   const [answers, setAnswers] = useState<Record<string, string>>({})
   const [selectedAnswer, setSelectedAnswer] = useState<string>("")
   const [result, setResult] = useState<QuizResult | null>(null)
-  const [needsTiebreaker, setNeedsTiebreaker] = useState(false)
+  const [needsBlend, setNeedsBlend] = useState(false)
+  const [needsConfirmation, setNeedsConfirmation] = useState(false)
   const [history, setHistory] = useState<QuizState[]>([])
   const router = useRouter()
 
@@ -325,8 +425,10 @@ export default function QuickQuiz() {
         return entryQuestions
       case "path":
         return pathQuestions[selectedPath as keyof typeof pathQuestions] || []
-      case "tiebreaker":
-        return tiebreakerQuestions
+      case "blend":
+        return blendQuestions
+      case "confirmation":
+        return confirmationQuestions
       default:
         return []
     }
@@ -341,8 +443,11 @@ export default function QuickQuiz() {
     if (selectedPath) {
       totalQuestions += 3 // Path questions
     }
-    if (needsTiebreaker) {
-      totalQuestions += 2 // Tiebreaker questions
+    if (needsBlend) {
+      totalQuestions += 2 // Blend questions
+    }
+    if (needsConfirmation) {
+      totalQuestions += 3 // Confirmation questions
     }
 
     let completedQuestions = 0
@@ -350,8 +455,10 @@ export default function QuickQuiz() {
       completedQuestions = currentQuestionIndex
     } else if (currentStep === "path") {
       completedQuestions = 2 + currentQuestionIndex
-    } else if (currentStep === "tiebreaker") {
+    } else if (currentStep === "blend") {
       completedQuestions = 5 + currentQuestionIndex
+    } else if (currentStep === "confirmation") {
+      completedQuestions = 7 + currentQuestionIndex
     }
 
     return Math.round((completedQuestions / totalQuestions) * 100)
@@ -370,7 +477,8 @@ export default function QuickQuiz() {
       questionIndex: currentQuestionIndex,
       selectedPath,
       answers: { ...answers },
-      needsTiebreaker,
+      needsBlend,
+      needsConfirmation,
     }
     setHistory((prev) => [...prev, state])
   }
@@ -458,29 +566,50 @@ export default function QuickQuiz() {
         setSelectedAnswer("")
       } else {
         // Second entry question - confirm path and move to path questions
-        setCurrentStep("path")
-        setCurrentQuestionIndex(0)
-        setSelectedAnswer("")
+        const answer = currentQuestion.answers.find((a) => a.id === selectedAnswer)
+        if (answer && "route" in answer && answer.route) {
+          setSelectedPath(answer.route as string)
+        }
+        
+        // Check if we need blend detection
+        const mixedAnswers = Object.values(newAnswers).filter((answerId) => {
+          const allQuestions = [...entryQuestions]
+          for (const q of allQuestions) {
+            const a = q.answers.find((ans) => ans.id === answerId)
+            if (a && a.styles.includes("mixed")) return true
+          }
+          return false
+        })
+
+        if (mixedAnswers.length >= 1) {
+          setNeedsBlend(true)
+          setCurrentStep("blend")
+          setCurrentQuestionIndex(0)
+          setSelectedAnswer("")
+        } else {
+          setCurrentStep("path")
+          setCurrentQuestionIndex(0)
+          setSelectedAnswer("")
+        }
       }
     } else if (currentStep === "path") {
       if (currentQuestionIndex < 2) {
         setCurrentQuestionIndex(currentQuestionIndex + 1)
         setSelectedAnswer("")
       } else {
-        // Check if we need tiebreaker
-        const mixedAnswers = Object.values(newAnswers).filter((answer) => {
-          // Find if this answer was "mixed"
-          const allQuestions = [...entryQuestions, ...Object.values(pathQuestions).flat()]
+        // Check if we need confirmation questions
+        const mixedAnswers = Object.values(newAnswers).filter((answerId) => {
+          const allQuestions = [...entryQuestions, ...Object.values(pathQuestions).flat() as QuizQuestion[]]
           for (const q of allQuestions) {
-            const a = q.answers.find((ans) => ans.id === answer)
+            const a = q.answers.find((ans) => ans.id === answerId)
             if (a && a.styles.includes("mixed")) return true
           }
           return false
         })
 
         if (mixedAnswers.length >= 2) {
-          setNeedsTiebreaker(true)
-          setCurrentStep("tiebreaker")
+          setNeedsConfirmation(true)
+          setCurrentStep("confirmation")
           setCurrentQuestionIndex(0)
           setSelectedAnswer("")
         } else {
@@ -490,12 +619,23 @@ export default function QuickQuiz() {
           setCurrentStep("result")
         }
       }
-    } else if (currentStep === "tiebreaker") {
-      if (currentQuestionIndex === 0) {
-        setCurrentQuestionIndex(1)
+    } else if (currentStep === "blend") {
+      if (currentQuestionIndex < 1) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1)
         setSelectedAnswer("")
       } else {
-        // Calculate final result with tiebreaker
+        // Move to confirmation questions
+        setNeedsConfirmation(true)
+        setCurrentStep("confirmation")
+        setCurrentQuestionIndex(0)
+        setSelectedAnswer("")
+      }
+    } else if (currentStep === "confirmation") {
+      if (currentQuestionIndex < 2) {
+        setCurrentQuestionIndex(currentQuestionIndex + 1)
+        setSelectedAnswer("")
+      } else {
+        // Calculate final result
         const finalResult = calculateResult(newAnswers)
         setResult(finalResult)
         setCurrentStep("result")
@@ -514,7 +654,8 @@ export default function QuickQuiz() {
     setCurrentQuestionIndex(previousState.questionIndex)
     setSelectedPath(previousState.selectedPath)
     setAnswers(previousState.answers)
-    setNeedsTiebreaker(previousState.needsTiebreaker)
+    setNeedsBlend(previousState.needsBlend)
+    setNeedsConfirmation(previousState.needsConfirmation)
 
     // Set the selected answer for the previous question
     const prevQuestions = (() => {
@@ -523,8 +664,10 @@ export default function QuickQuiz() {
           return entryQuestions
         case "path":
           return pathQuestions[previousState.selectedPath as keyof typeof pathQuestions] || []
-        case "tiebreaker":
-          return tiebreakerQuestions
+        case "blend":
+          return blendQuestions
+        case "confirmation":
+          return confirmationQuestions
         default:
           return []
       }
@@ -694,8 +837,9 @@ export default function QuickQuiz() {
           <div className="flex justify-between items-center mb-4">
             <div className="text-sm text-gray-600">
               {currentStep === "entry" && `Question ${currentQuestionIndex + 1} of 2`}
-              {currentStep === "path" && `Question ${currentQuestionIndex + 3} of ${needsTiebreaker ? 7 : 5}`}
-              {currentStep === "tiebreaker" && `Question ${currentQuestionIndex + 6} of 7`}
+              {currentStep === "path" && `Question ${currentQuestionIndex + 3} of ${needsConfirmation ? 8 : 5}`}
+              {currentStep === "blend" && `Question ${currentQuestionIndex + 5} of 7`}
+              {currentStep === "confirmation" && `Question ${currentQuestionIndex + 7} of 8`}
             </div>
             <div className="text-sm text-gray-600">{progress}% Complete</div>
           </div>
@@ -761,9 +905,11 @@ export default function QuickQuiz() {
             <span>
               {currentStep === "path" && currentQuestionIndex === 2
                 ? "Get My Results"
-                : currentStep === "tiebreaker" && currentQuestionIndex === 1
-                  ? "Get My Results"
-                  : "Next"}
+                : currentStep === "blend" && currentQuestionIndex === 1
+                  ? "Continue"
+                  : currentStep === "confirmation" && currentQuestionIndex === 2
+                    ? "Get My Results"
+                    : "Next"}
             </span>
             <ArrowRight className="w-4 h-4" />
           </Button>
