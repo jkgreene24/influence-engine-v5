@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -58,21 +58,21 @@ const entryQuestions: QuizQuestion[] = [
   {
     id: "entry1",
     question: "What best describes how you lead or influence others?",
-    answers: randomizeAnswers([
-      { text: "I create momentum and drive action.", styles: ["catalyst", "connector"], route: "fast-paced" },
-      { text: "I bring structure and steady follow-through.", styles: ["anchor", "navigator"], route: "structure" },
-      { text: "I create emotional safety and strong human connection.", styles: ["diplomat", "connector"], route: "relationship" },
-      { text: "Honestly? A mix of two or more of these.", styles: ["mixed"], route: "blend" },
-    ]),
+    answers: [
+      { id: "A", text: "I create momentum and drive action.", styles: ["catalyst", "connector"], route: "fast-paced" },
+      { id: "B", text: "I bring structure and steady follow-through.", styles: ["anchor", "navigator"], route: "structure" },
+      { id: "C", text: "I create emotional safety and strong human connection.", styles: ["diplomat", "connector"], route: "relationship" },
+      { id: "D", text: "Honestly? A mix of two or more of these.", styles: ["mixed"], route: "blend" },
+    ],
   },
   {
     id: "entry2",
     question: "What frustrates you most in group situations?",
-    answers: randomizeAnswers([
-      { text: "When nothing is getting done.", styles: ["catalyst"], route: "fast-paced" },
-      { text: "When people are disorganized or short-sighted.", styles: ["anchor", "navigator"], route: "structure" },
-      { text: "When emotions are ignored or people feel left out.", styles: ["diplomat", "connector"], route: "relationship" },
-    ]),
+    answers: [
+      { id: "A", text: "When nothing is getting done.", styles: ["catalyst"], route: "fast-paced" },
+      { id: "B", text: "When people are disorganized or short-sighted.", styles: ["anchor", "navigator"], route: "structure" },
+      { id: "C", text: "When emotions are ignored or people feel left out.", styles: ["diplomat", "connector"], route: "relationship" },
+    ],
   },
 ]
 
@@ -81,114 +81,114 @@ const pathQuestions = {
     {
       id: "fp1",
       question: "When things stall out, I usually:",
-      answers: randomizeAnswers([
-        { text: "Inject energy and urgency to move it forward.", styles: ["catalyst"] },
-        { text: "Talk to people and get everyone back on the same page.", styles: ["connector"] },
-        { text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "fp1-alt" },
-      ]),
+      answers: [
+        { id: "A", text: "Inject energy and urgency to move it forward.", styles: ["catalyst"] },
+        { id: "B", text: "Talk to people and get everyone back on the same page.", styles: ["connector"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "fp1-alt" },
+      ],
     },
     {
       id: "fp1-alt",
       question: "When things stall out, what feels most natural to you?",
-      answers: randomizeAnswers([
-        { text: "Providing structure and calm", styles: ["anchor"] },
-        { text: "Holding space and emotional safety", styles: ["diplomat"] },
-        { text: "Framing the big picture", styles: ["navigator"] },
-      ]),
+      answers: [
+        { id: "A", text: "Providing structure and calm", styles: ["anchor"] },
+        { id: "B", text: "Holding space and emotional safety", styles: ["diplomat"] },
+        { id: "C", text: "Framing the big picture", styles: ["navigator"] },
+      ],
     },
     {
       id: "fp2",
       question: "When facing pressure or conflict, I usually:",
-      answers: randomizeAnswers([
-        { text: "Get everyone communicating again", styles: ["connector"] },
-        { text: "Push through with urgency to keep moving", styles: ["catalyst"] },
-        { text: "Pause to check on emotional temperature", styles: ["diplomat"] },
-      ]),
+      answers: [
+        { id: "A", text: "Get everyone communicating again", styles: ["connector"] },
+        { id: "B", text: "Push through with urgency to keep moving", styles: ["catalyst"] },
+        { id: "C", text: "Pause to check on emotional temperature", styles: ["diplomat"] },
+      ],
     },
     {
       id: "fp3",
       question: "What drives your sense of urgency the most?",
-      answers: randomizeAnswers([
-        { text: "The fear of missing opportunity", styles: ["catalyst"] },
-        { text: "Seeing people feel disconnected or lost", styles: ["connector"] },
-        { text: "Wanting to make sure it's truly the right time", styles: ["anchor", "navigator"] },
-      ]),
+      answers: [
+        { id: "A", text: "The fear of missing opportunity", styles: ["catalyst"] },
+        { id: "B", text: "Seeing people feel disconnected or lost", styles: ["connector"] },
+        { id: "C", text: "Wanting to make sure it's truly the right time", styles: ["anchor", "navigator"] },
+      ],
     },
   ],
   structure: [
     {
       id: "st1",
       question: "In complex situations, I prefer to:",
-      answers: randomizeAnswers([
-        { text: "Break it into steps and stabilize it.", styles: ["anchor"] },
-        { text: "Step back and look at long-term impacts.", styles: ["navigator"] },
-        { text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "st1-alt" },
-      ]),
+      answers: [
+        { id: "A", text: "Break it into steps and stabilize it.", styles: ["anchor"] },
+        { id: "B", text: "Step back and look at long-term impacts.", styles: ["navigator"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "st1-alt" },
+      ],
     },
     {
       id: "st1-alt",
       question: "In complex situations, what feels more natural to you?",
-      answers: randomizeAnswers([
-        { text: "Sparking energy and action", styles: ["catalyst"] },
-        { text: "Holding space and emotional safety", styles: ["diplomat"] },
-        { text: "Creating clarity and unity", styles: ["connector"] },
-      ]),
+      answers: [
+        { id: "A", text: "Sparking energy and action", styles: ["catalyst"] },
+        { id: "B", text: "Holding space and emotional safety", styles: ["diplomat"] },
+        { id: "C", text: "Creating clarity and unity", styles: ["connector"] },
+      ],
     },
     {
       id: "st2",
       question: "What creates confidence for you in a messy situation?",
-      answers: randomizeAnswers([
-        { text: "Having a steady, practical plan", styles: ["anchor"] },
-        { text: "Reconnecting to the bigger vision", styles: ["navigator"] },
-        { text: "Making sure everyone's aligned emotionally", styles: ["diplomat"] },
-      ]),
+      answers: [
+        { id: "A", text: "Having a steady, practical plan", styles: ["anchor"] },
+        { id: "B", text: "Reconnecting to the bigger vision", styles: ["navigator"] },
+        { id: "C", text: "Making sure everyone's aligned emotionally", styles: ["diplomat"] },
+      ],
     },
     {
       id: "st3",
       question: "How do you usually prevent breakdowns?",
-      answers: randomizeAnswers([
-        { text: "By mapping out potential risks and blockers", styles: ["navigator"] },
-        { text: "By putting the right systems in place early", styles: ["anchor"] },
-        { text: "By keeping people talking and collaborating", styles: ["connector"] },
-      ]),
+      answers: [
+        { id: "A", text: "By mapping out potential risks and blockers", styles: ["navigator"] },
+        { id: "B", text: "By putting the right systems in place early", styles: ["anchor"] },
+        { id: "C", text: "By keeping people talking and collaborating", styles: ["connector"] },
+      ],
     },
   ],
   relationship: [
     {
       id: "rel1",
       question: "My default way of helping is:",
-      answers: randomizeAnswers([
-        { text: "Listening and tuning into emotions.", styles: ["diplomat"] },
-        { text: "Clarifying and building shared understanding.", styles: ["connector"] },
-        { text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "rel1-alt" },
-      ]),
+      answers: [
+        { id: "A", text: "Listening and tuning into emotions.", styles: ["diplomat"] },
+        { id: "B", text: "Clarifying and building shared understanding.", styles: ["connector"] },
+        { id: "C", text: "Not quite either of these. Show me another option.", styles: ["mixed"], followUp: "rel1-alt" },
+      ],
     },
     {
       id: "rel1-alt",
       question: "When someone needs help, what's your natural instinct?",
-      answers: randomizeAnswers([
-        { text: "Providing structure and calm", styles: ["anchor"] },
-        { text: "Sparking action or momentum", styles: ["catalyst"] },
-        { text: "Framing a longer-term vision", styles: ["navigator"] },
-      ]),
+      answers: [
+        { id: "A", text: "Providing structure and calm", styles: ["anchor"] },
+        { id: "B", text: "Sparking action or momentum", styles: ["catalyst"] },
+        { id: "C", text: "Framing a longer-term vision", styles: ["navigator"] },
+      ],
     },
     {
       id: "rel2",
       question: "When others are tense or struggling, I naturally:",
-      answers: randomizeAnswers([
-        { text: "Hold space and make them feel safe", styles: ["diplomat"] },
-        { text: "Get people realigned and working together again", styles: ["connector"] },
-        { text: "Offer a practical next step", styles: ["anchor"] },
-      ]),
+      answers: [
+        { id: "A", text: "Hold space and make them feel safe", styles: ["diplomat"] },
+        { id: "B", text: "Get people realigned and working together again", styles: ["connector"] },
+        { id: "C", text: "Offer a practical next step", styles: ["anchor"] },
+      ],
     },
     {
       id: "rel3",
       question: "What matters most to you when resolving issues?",
-      answers: randomizeAnswers([
-        { text: "Emotional harmony", styles: ["diplomat"] },
-        { text: "Shared clarity", styles: ["connector"] },
-        { text: "Getting a clear plan and process", styles: ["anchor", "navigator"] },
-      ]),
+      answers: [
+        { id: "A", text: "Emotional harmony", styles: ["diplomat"] },
+        { id: "B", text: "Shared clarity", styles: ["connector"] },
+        { id: "C", text: "Getting a clear plan and process", styles: ["anchor", "navigator"] },
+      ],
     },
   ],
 }
@@ -197,20 +197,20 @@ const blendQuestions = [
   {
     id: "blend1",
     question: "You tend to blend energy and depth. When you're under pressure, what shows up first?",
-    answers: randomizeAnswers([
-      { text: "You spring into action", styles: ["catalyst"] },
-      { text: "You emotionally anchor and hold space", styles: ["diplomat"] },
-      { text: "You try to reconnect the group", styles: ["connector"] },
-    ]),
+    answers: [
+      { id: "A", text: "You spring into action", styles: ["catalyst"] },
+      { id: "B", text: "You emotionally anchor and hold space", styles: ["diplomat"] },
+      { id: "C", text: "You try to reconnect the group", styles: ["connector"] },
+    ],
   },
   {
     id: "blend2",
     question: "Which feels more natural, even if you do both?",
-    answers: randomizeAnswers([
-      { text: "Driving change and initiating movement", styles: ["catalyst", "navigator"] },
-      { text: "Building emotional trust and psychological safety", styles: ["diplomat", "connector"] },
-      { text: "Creating order and planning for success", styles: ["anchor"] },
-    ]),
+    answers: [
+      { id: "A", text: "Driving change and initiating movement", styles: ["catalyst", "navigator"] },
+      { id: "B", text: "Building emotional trust and psychological safety", styles: ["diplomat", "connector"] },
+      { id: "C", text: "Creating order and planning for success", styles: ["anchor"] },
+    ],
   },
 ]
 
@@ -218,35 +218,35 @@ const confirmationQuestions = [
   {
     id: "confirm1",
     question: "People often describe me as:",
-    answers: randomizeAnswers([
-      { text: "Bold and energizing", styles: ["catalyst"] },
-      { text: "Strategic and insightful", styles: ["navigator"] },
-      { text: "Empathetic and emotionally present", styles: ["diplomat"] },
-      { text: "Calm and dependable", styles: ["anchor"] },
-      { text: "Collaborative and connective", styles: ["connector"] },
-    ]),
+    answers: [
+      { id: "A", text: "Bold and energizing", styles: ["catalyst"] },
+      { id: "B", text: "Strategic and insightful", styles: ["navigator"] },
+      { id: "C", text: "Empathetic and emotionally present", styles: ["diplomat"] },
+      { id: "D", text: "Calm and dependable", styles: ["anchor"] },
+      { id: "E", text: "Collaborative and connective", styles: ["connector"] },
+    ],
   },
   {
     id: "confirm2",
     question: "When I'm leading, I care most about:",
-    answers: randomizeAnswers([
-      { text: "Getting things done quickly", styles: ["catalyst"] },
-      { text: "Making sure people feel safe and seen", styles: ["diplomat"] },
-      { text: "Long-term vision and impact", styles: ["navigator"] },
-      { text: "A clean plan and reliable process", styles: ["anchor"] },
-      { text: "Everyone feeling aligned and involved", styles: ["connector"] },
-    ]),
+    answers: [
+      { id: "A", text: "Getting things done quickly", styles: ["catalyst"] },
+      { id: "B", text: "Making sure people feel safe and seen", styles: ["diplomat"] },
+      { id: "C", text: "Long-term vision and impact", styles: ["navigator"] },
+      { id: "D", text: "A clean plan and reliable process", styles: ["anchor"] },
+      { id: "E", text: "Everyone feeling aligned and involved", styles: ["connector"] },
+    ],
   },
   {
     id: "confirm3",
     question: "My biggest influence strength is:",
-    answers: randomizeAnswers([
-      { text: "Driving action", styles: ["catalyst"] },
-      { text: "Emotional presence", styles: ["diplomat"] },
-      { text: "Strategic vision", styles: ["navigator"] },
-      { text: "Steady structure", styles: ["anchor"] },
-      { text: "Unifying people", styles: ["connector"] },
-    ]),
+    answers: [
+      { id: "A", text: "Driving action", styles: ["catalyst"] },
+      { id: "B", text: "Emotional presence", styles: ["diplomat"] },
+      { id: "C", text: "Strategic vision", styles: ["navigator"] },
+      { id: "D", text: "Steady structure", styles: ["anchor"] },
+      { id: "E", text: "Unifying people", styles: ["connector"] },
+    ],
   },
 ]
 
@@ -254,24 +254,24 @@ const tiebreakerQuestions = [
   {
     id: "tie1",
     question: "When you're at your best, what drives you most?",
-    answers: randomizeAnswers([
-      { text: "Vision", styles: ["navigator"] },
-      { text: "Momentum", styles: ["catalyst"] },
-      { text: "People", styles: ["connector"] },
-      { text: "Stability", styles: ["anchor"] },
-      { text: "Emotion", styles: ["diplomat"] },
-    ]),
+    answers: [
+      { id: "A", text: "Vision", styles: ["navigator"] },
+      { id: "B", text: "Momentum", styles: ["catalyst"] },
+      { id: "C", text: "People", styles: ["connector"] },
+      { id: "D", text: "Stability", styles: ["anchor"] },
+      { id: "E", text: "Emotion", styles: ["diplomat"] },
+    ],
   },
   {
     id: "tie2",
     question: "What kind of feedback do you hear most?",
-    answers: randomizeAnswers([
-      { text: "You keep things moving.", styles: ["catalyst"] },
-      { text: "You always understand people.", styles: ["diplomat"] },
-      { text: "You think big.", styles: ["navigator"] },
-      { text: "You're grounded and dependable.", styles: ["anchor"] },
-      { text: "You bring people together.", styles: ["connector"] },
-    ]),
+    answers: [
+      { id: "A", text: "You keep things moving.", styles: ["catalyst"] },
+      { id: "B", text: "You always understand people.", styles: ["diplomat"] },
+      { id: "C", text: "You think big.", styles: ["navigator"] },
+      { id: "D", text: "You're grounded and dependable.", styles: ["anchor"] },
+      { id: "E", text: "You bring people together.", styles: ["connector"] },
+    ],
   },
 ]
 
@@ -424,18 +424,82 @@ export default function QuickQuiz() {
   const [needsBlend, setNeedsBlend] = useState(false)
   const [needsConfirmation, setNeedsConfirmation] = useState(false)
   const [history, setHistory] = useState<QuizState[]>([])
+  const [randomizedQuestions, setRandomizedQuestions] = useState<{
+    entry: QuizQuestion[]
+    fastPaced: QuizQuestion[]
+    structure: QuizQuestion[]
+    relationship: QuizQuestion[]
+    blend: QuizQuestion[]
+    confirmation: QuizQuestion[]
+    tiebreaker: QuizQuestion[]
+  } | null>(null)
   const router = useRouter()
 
+  // Client-side randomization
+  useEffect(() => {
+    const randomized = {
+      entry: entryQuestions.map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      fastPaced: pathQuestions["fast-paced"].map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      structure: pathQuestions["structure"].map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      relationship: pathQuestions["relationship"].map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      blend: blendQuestions.map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      confirmation: confirmationQuestions.map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      })),
+      tiebreaker: tiebreakerQuestions.map(q => ({
+        ...q,
+        answers: randomizeAnswers(q.answers.map(({ id, ...rest }) => rest))
+      }))
+    }
+    setRandomizedQuestions(randomized)
+  }, [])
+
   const getCurrentQuestions = () => {
+    if (!randomizedQuestions) {
+      // Return original questions during SSR
+      switch (currentStep) {
+        case "entry":
+          return entryQuestions
+        case "path":
+          return pathQuestions[selectedPath as keyof typeof pathQuestions] || []
+        case "blend":
+          return blendQuestions
+        case "confirmation":
+          return confirmationQuestions
+        default:
+          return []
+      }
+    }
+
+    // Return randomized questions on client
     switch (currentStep) {
       case "entry":
-        return entryQuestions
+        return randomizedQuestions.entry
       case "path":
-        return pathQuestions[selectedPath as keyof typeof pathQuestions] || []
+        if (selectedPath === "fast-paced") return randomizedQuestions.fastPaced
+        if (selectedPath === "structure") return randomizedQuestions.structure
+        if (selectedPath === "relationship") return randomizedQuestions.relationship
+        return []
       case "blend":
-        return blendQuestions
+        return randomizedQuestions.blend
       case "confirmation":
-        return confirmationQuestions
+        return randomizedQuestions.confirmation
       default:
         return []
     }
@@ -503,17 +567,32 @@ export default function QuickQuiz() {
     Object.entries(allAnswers).forEach(([questionId, answerId]) => {
       let question: QuizQuestion | undefined
 
-      // Find the question
-      if (questionId.startsWith("entry")) {
-        question = entryQuestions.find((q) => q.id === questionId)
-      } else if (questionId.startsWith("fp")) {
-        question = pathQuestions["fast-paced"].find((q) => q.id === questionId)
-      } else if (questionId.startsWith("st")) {
-        question = pathQuestions["structure"].find((q) => q.id === questionId)
-      } else if (questionId.startsWith("rel")) {
-        question = pathQuestions["relationship"].find((q) => q.id === questionId)
-      } else if (questionId.startsWith("tie")) {
-        question = tiebreakerQuestions.find((q) => q.id === questionId)
+      // Find the question using randomized questions if available
+      if (randomizedQuestions) {
+        if (questionId.startsWith("entry")) {
+          question = randomizedQuestions.entry.find((q) => q.id === questionId)
+        } else if (questionId.startsWith("fp")) {
+          question = randomizedQuestions.fastPaced.find((q) => q.id === questionId)
+        } else if (questionId.startsWith("st")) {
+          question = randomizedQuestions.structure.find((q) => q.id === questionId)
+        } else if (questionId.startsWith("rel")) {
+          question = randomizedQuestions.relationship.find((q) => q.id === questionId)
+        } else if (questionId.startsWith("tie")) {
+          question = randomizedQuestions.tiebreaker.find((q) => q.id === questionId)
+        }
+      } else {
+        // Fallback to original questions
+        if (questionId.startsWith("entry")) {
+          question = entryQuestions.find((q) => q.id === questionId)
+        } else if (questionId.startsWith("fp")) {
+          question = pathQuestions["fast-paced"].find((q) => q.id === questionId)
+        } else if (questionId.startsWith("st")) {
+          question = pathQuestions["structure"].find((q) => q.id === questionId)
+        } else if (questionId.startsWith("rel")) {
+          question = pathQuestions["relationship"].find((q) => q.id === questionId)
+        } else if (questionId.startsWith("tie")) {
+          question = tiebreakerQuestions.find((q) => q.id === questionId)
+        }
       }
 
       if (question) {
@@ -666,17 +745,35 @@ export default function QuickQuiz() {
 
     // Set the selected answer for the previous question
     const prevQuestions = (() => {
-      switch (previousState.step) {
-        case "entry":
-          return entryQuestions
-        case "path":
-          return pathQuestions[previousState.selectedPath as keyof typeof pathQuestions] || []
-        case "blend":
-          return blendQuestions
-        case "confirmation":
-          return confirmationQuestions
-        default:
-          return []
+      if (randomizedQuestions) {
+        switch (previousState.step) {
+          case "entry":
+            return randomizedQuestions.entry
+          case "path":
+            if (previousState.selectedPath === "fast-paced") return randomizedQuestions.fastPaced
+            if (previousState.selectedPath === "structure") return randomizedQuestions.structure
+            if (previousState.selectedPath === "relationship") return randomizedQuestions.relationship
+            return []
+          case "blend":
+            return randomizedQuestions.blend
+          case "confirmation":
+            return randomizedQuestions.confirmation
+          default:
+            return []
+        }
+      } else {
+        switch (previousState.step) {
+          case "entry":
+            return entryQuestions
+          case "path":
+            return pathQuestions[previousState.selectedPath as keyof typeof pathQuestions] || []
+          case "blend":
+            return blendQuestions
+          case "confirmation":
+            return confirmationQuestions
+          default:
+            return []
+        }
       }
     })()
 
@@ -739,6 +836,18 @@ export default function QuickQuiz() {
         </div>
       )
     }
+  }
+
+  // Show loading state while randomizing questions
+  if (!randomizedQuestions) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[#92278F] mx-auto mb-4"></div>
+          <p className="text-gray-600">Preparing your personalized quiz...</p>
+        </div>
+      </div>
+    )
   }
 
   if (currentStep === "result") {
