@@ -345,14 +345,26 @@ const styleDescriptions = {
 }
 
 const blendDescriptions = {
-  "catalyst-connector":
-    "You move fast, build alignment, and create contagious energy. You're both a spark and a unifier.",
-  "anchor-navigator": "You're grounded and strategic, trusted to both stabilize and lead long-term change.",
-  "diplomat-connector": "You create safe, empathetic spaces where people feel heard and aligned.",
-  "catalyst-diplomat": "You blend bold action with emotional intuition—people feel inspired and understood.",
-  "connector-navigator":
-    "You harmonize people and big-picture strategy, often becoming the translator between vision and reality.",
-  "anchor-diplomat": "You provide calm, practical support while reading people deeply and responding with care.",
+  "catalyst-navigator": "You combine bold momentum with smart strategy. People are drawn to your drive, but stay because of your clarity and planning.",
+  "catalyst-connector": "You move fast and bring people with you. Your energy inspires others, and your ability to connect makes it contagious.",
+  "catalyst-diplomat": "You lead with passion but always tune in to others. You push forward while creating space for feelings and nuance.",
+  "catalyst-anchor": "You bring focused energy and long-term consistency. You push things forward without losing your grounding.",
+  "navigator-catalyst": "You lead with strategy, then bring the fire when it counts. People trust your plan, but feel your urgency.",
+  "navigator-connector": "You influence through insight and intuition. You read the situation and the people in it, helping everyone move forward together.",
+  "navigator-diplomat": "You lead with clarity and compassion. People look to you for smart plans that also feel fair and considerate.",
+  "navigator-anchor": "You combine strategy and steadiness. People trust you to think ahead and hold the line when it counts.",
+  "connector-catalyst": "You lead with relationships and energize others to move. Your influence feels both personal and powerful.",
+  "connector-navigator": "You build trust quickly — then guide people with clarity. You connect on a human level and show them what's possible.",
+  "connector-diplomat": "You connect deeply and calmly. People trust you because you listen, reflect, and create emotional safety.",
+  "connector-anchor": "You're emotionally tuned-in and unwavering. People feel safe opening up to you because you're both relatable and reliable.",
+  "diplomat-catalyst": "You lead with empathy and add fire when it matters. People feel your care but also your conviction.",
+  "diplomat-navigator": "You guide with empathy and strategic thinking. You're emotionally grounded and intellectually clear.",
+  "diplomat-connector": "You influence through emotional insight and connection. You make people feel understood, valued, and motivated to engage.",
+  "diplomat-anchor": "You are a calm force of trust. People open up because you're steady and emotionally present — a rock in high-stakes moments.",
+  "anchor-catalyst": "You're steady and strong — with a surprising ability to ignite momentum when needed. People rely on your foundation and follow your lead when you decide to move.",
+  "anchor-navigator": "You bring stability and foresight. People trust you to plan ahead and stick with the process until the outcome is secure.",
+  "anchor-connector": "You are loyal, grounded, and people-first. You build long-term trust through presence and relational consistency.",
+  "anchor-diplomat": "You offer emotional steadiness and wisdom. People feel safe sharing with you because you lead with quiet confidence.",
 }
 
 const getStepInfo = (step: string, path?: string) => {
