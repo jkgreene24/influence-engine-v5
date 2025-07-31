@@ -508,31 +508,65 @@ export default function QuickQuiz() {
   const currentQuestions = getCurrentQuestions()
   const currentQuestion = currentQuestions[currentQuestionIndex]
 
-  // Calculate total progress across all steps
+  // Calculate total progress based on current step and question
   const getTotalProgress = () => {
-    let totalQuestions = 2 // Entry questions
-    if (selectedPath) {
-      totalQuestions += 3 // Path questions
-    }
-    if (needsBlend) {
-      totalQuestions += 2 // Blend questions
-    }
-    if (needsConfirmation) {
-      totalQuestions += 3 // Confirmation questions
-    }
-
+    const currentQuestions = getCurrentQuestions()
+    const totalQuestionsInStep = currentQuestions.length
+    
+    if (totalQuestionsInStep === 0) return 0
+    
+    // Calculate progress within the current step
+    const stepProgress = Math.round(((currentQuestionIndex + 1) / totalQuestionsInStep) * 100)
+    
+    // Calculate overall progress across all steps
+    let totalQuestions = 0
     let completedQuestions = 0
+
+    // Entry questions (always 2)
+    totalQuestions += 2
     if (currentStep === "entry") {
       completedQuestions = currentQuestionIndex
-    } else if (currentStep === "path") {
-      completedQuestions = 2 + currentQuestionIndex
-    } else if (currentStep === "blend") {
-      completedQuestions = 5 + currentQuestionIndex
-    } else if (currentStep === "confirmation") {
-      completedQuestions = 7 + currentQuestionIndex
+    } else {
+      completedQuestions += 2 // Entry questions completed
     }
 
-    return Math.round((completedQuestions / totalQuestions) * 100)
+    // Path questions (if we have a selected path)
+    if (selectedPath && currentStep !== "entry") {
+      const pathQuestionCount = pathQuestions[selectedPath as keyof typeof pathQuestions]?.length || 0
+      totalQuestions += pathQuestionCount
+      
+      if (currentStep === "path") {
+        completedQuestions += currentQuestionIndex
+      } else {
+        completedQuestions += pathQuestionCount // Path questions completed
+      }
+    }
+
+    // Blend questions (if needed)
+    if (needsBlend && currentStep !== "entry") {
+      totalQuestions += 2
+      if (currentStep === "blend") {
+        completedQuestions += currentQuestionIndex
+      } else if (currentStep === "confirmation" || currentStep === "result") {
+        completedQuestions += 2 // Blend questions completed
+      }
+    }
+
+    // Confirmation questions (if needed)
+    if (needsConfirmation && (currentStep === "confirmation" || currentStep === "result")) {
+      totalQuestions += 3
+      if (currentStep === "confirmation") {
+        completedQuestions += currentQuestionIndex
+      } else if (currentStep === "result") {
+        completedQuestions += 3 // Confirmation questions completed
+      }
+    }
+
+    // Calculate overall progress
+    const overallProgress = Math.min(Math.round((completedQuestions / totalQuestions) * 100), 100)
+    
+    // Return the step progress for better user experience
+    return stepProgress
   }
 
   const progress = getTotalProgress()
@@ -951,12 +985,12 @@ export default function QuickQuiz() {
         {/* Progress Section */}
         <div className="mb-8">
           <div className="flex justify-between items-center mb-4">
-            <div className="text-sm text-gray-600">
-              {currentStep === "entry" && `Question ${currentQuestionIndex + 1} of 2`}
-              {currentStep === "path" && `Question ${currentQuestionIndex + 3} of ${needsConfirmation ? 8 : 5}`}
-              {currentStep === "blend" && `Question ${currentQuestionIndex + 5} of 7`}
-              {currentStep === "confirmation" && `Question ${currentQuestionIndex + 7} of 8`}
-            </div>
+                <div className="text-sm text-gray-600">
+               {currentStep === "entry" && `Question ${currentQuestionIndex + 1} of 2`}
+               {currentStep === "path" && `Question ${currentQuestionIndex + 1} of ${currentQuestions.length}`}
+               {currentStep === "blend" && `Question ${currentQuestionIndex + 1} of 2`}
+               {currentStep === "confirmation" && `Question ${currentQuestionIndex + 1} of 3`}
+             </div>
             <div className="text-sm text-gray-600">{progress}% Complete</div>
           </div>
           <Progress value={progress} className="h-3 bg-gray-200" />
